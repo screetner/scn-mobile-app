@@ -30,6 +30,11 @@ class VideoMetadataProvider {
     }
 
     _videoDirectory = context.recordDirectory;
+
+    if(!_videoDirectory.existsSync()) {
+      _videoDirectory.createSync(recursive: true);
+    }
+
     _isInitialized = true;
   }
 
@@ -124,6 +129,9 @@ class VideoMetadataProvider {
       return null;
     }
   }
+
+  /// The 'video record directory path'
+  Directory get recordDirectory => _videoDirectory;
 }
 
 class ImmutableVideoInformation {

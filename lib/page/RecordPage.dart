@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:tus_client_background_demo/model/VideoMetadataProvider.dart';
 import 'package:wakelock/wakelock.dart';
 
 class RecordPage extends StatefulWidget {
@@ -24,7 +25,7 @@ class _RecordPageState extends State<RecordPage> {
   String? _recordStartTime;
 
   late Directory appDirectory;
-  late String videoDirectory;
+  late String videoDirectoryPath;
 
   void initState() {
     super.initState();
@@ -34,7 +35,6 @@ class _RecordPageState extends State<RecordPage> {
       DeviceOrientation.portraitDown,
     ]);
 
-    _setupDirectory();
     _initializeCameras();
   }
 
@@ -179,20 +179,8 @@ class _RecordPageState extends State<RecordPage> {
   }
 
   Future<String> getVideoPath() async {
-    final directory = await getApplicationDocumentsDirectory();
-    String filePath = path.join(directory.path, '$_recordStartTime.mp4');
+    String filePath = path.join(VideoMetadataProvider().recordDirectory.path, '$_recordStartTime.mp4');
     return filePath;
-  }
-
-  Future<void> _setupDirectory() async {
-    try {
-      appDirectory = await getApplicationDocumentsDirectory();
-      videoDirectory = '${appDirectory.path}/records';
-      await Directory(videoDirectory).create(recursive: true);
-
-    } catch (e) {
-      print('Error setting up directory: $e');
-    }
   }
 
   Future<void> _initializeCameras() async {

@@ -32,8 +32,8 @@ class _ScreetnerHomeState extends State<ScreetnerHome> {
     return Scaffold(
       body: <Widget>[
         HomePage(),
+        RecordPage(),
         NotificationPage(),
-        MessagePage(),
       ][currentPageIndex],
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {

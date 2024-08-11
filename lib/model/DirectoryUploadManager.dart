@@ -2,16 +2,19 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
+import 'package:tus_client_background_demo/context/ImmutableDirectoryUploadInput.dart';
+import 'package:tus_client_background_demo/model/DirectoryUploadClient.dart';
 import 'package:tus_client_background_demo/model/NotificationManager.dart';
 import 'package:tus_client_dart/tus_client_dart.dart';
 import 'package:workmanager/workmanager.dart';
 
-import '../context/ImmutableFileUploadManagerContext.dart';
+import '../context/ImmutableUploadManagerContext.dart';
+import 'DirectoryUploadStore.dart';
 
 class DirectoryUploadManager {
   bool _isInitialized = false;
 
-  late final String _tusdServerUrl;
+  late final Uri _tusdServerUrl;
   late final Directory _tusStoreDirectory;
   late final UploadContext _context;
 
@@ -44,15 +47,21 @@ class DirectoryUploadManager {
     return notificationsInitialized;
   }
 
-  Future<void> uploadDirectory(String uploadDirectory) async {
-    Map<String, dynamic> contextStr = _context.getAsMap();
-    contextStr['upload_directory'] = uploadDirectory;
-    // inputData['chunk_size'] = (512 * 1024 * 2);
+  Future<void> uploadDirectory({required Directory uploadDirectory, int? chunkSize}) async {
+    Map<String, dynamic> inputMap = getWorkmanagerContext(uploadDirectory: uploadDirectory, chunkSize: chunkSize).getAsMap();
+    // inputData['chunk_size'] = (512 * 1024);
 
-    Workmanager().registerOneOffTask(getTaskUniqueName(uploadDirectory),'_',
-        constraints: Constraints(networkType: NetworkType.connected),
-        inputData: contextStr,
-        existingWorkPolicy: ExistingWorkPolicy.keep);
+    print("EXECUTE UPLOAD DIRECTORY ON WORK MANAGER");
+    // Workmanager().registerOneOffTask(getTaskUniqueName(uploadDirectoryPath),'_',
+    //     constraints: Constraints(networkType: NetworkType.connected),
+    //     inputData: contextMap,
+    //     existingWorkPolicy: ExistingWorkPolicy.replace);
+    // // TODO: change ExistingWorkPolicy from replace to keep
+
+    await foreGroundWorkManagerForDebugging(inputMap);
+
+    print("WORK MANAGER CALLED");
+
   }
 
   // Future<void> cancelUpload(String filePath) async {
@@ -77,6 +86,23 @@ class DirectoryUploadManager {
     return str.replaceAll(RegExp(r"\W+"), '.');
   }
 
+  DirectoryUploadInput getWorkmanagerContext({required Directory uploadDirectory, int? chunkSize}) {
+    return new DirectoryUploadInput(
+      uploadDirectory: uploadDirectory,
+      chunkSize: chunkSize,
+      tusdServerUrl: _context.tusdServerUrl,
+      tusStoreDirectory: _context.tusStoreDirectory,
+      notificationChannelKey: _context.notificationChannelKey,
+      notificationChannelGroupKey: _context.notificationChannelGroupKey,
+      notificationChannelName: _context.notificationChannelName,
+      notificationChannelGroupName: _context.notificationChannelGroupName,
+      notificationChannelDescription: _context.notificationChannelDescription,
+      notificationSoundSource: _context.notificationSoundSource,
+      notificationDefaultColor: _context.notificationDefaultColor,
+      notificationVibrationPattern: _context.notificationVibrationPattern
+    );
+  }
+
   UploadContext getContext() {
     return _context;
   }
@@ -96,46 +122,40 @@ dynamic Function(double, Duration) throttle(dynamic Function(double, Duration) c
 @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    final UploadContext context = UploadContext.getAsContext(inputData!);
+    print("PRINT FROM WORK MANAGER");
+    final DirectoryUploadInput context = DirectoryUploadInput.getAsObject(inputData!);
     final NotificationManager nm = NotificationManager();
 
-    final filePath = inputData['file_path']!;
-    final chunkSize = inputData['chunk_size'] ?? (512 * 1024 * 2); // 1024 kB by default
+    final tusStoreDirectory = context.tusStoreDirectory;
 
-    print("CONSTRUCTING XFILE");
-    final file = XFile(filePath);
+    final uploadDirectory = context.uploadDirectory;
+    final uploadDirectoryPath = uploadDirectory.path;
+    final chunkSize = context.chunkSize ?? 512 * 1024;
 
-    print("CONSTRUCTING TUSD STORAGE DIRECTORY");
-    final tempDirectory = Directory(
-        '${context.tusStoreDirectory.path}/${file.name}_uploads');
-    if (!tempDirectory.existsSync()) {
-      print("CREATING NEW DIRECTORY FOR ${tempDirectory.path}");
-      tempDirectory.createSync(recursive: true);
+    if (!tusStoreDirectory.existsSync()) {
+      tusStoreDirectory.createSync(recursive: true);
     }
 
-    print("CONSTRUCTING TusClient");
-    final client = TusClient(
-      file,
-      store: TusFileStore(tempDirectory),
+    final client = DirectoryUploadClient(
+      uploadDirectory,
+      store: DirectoryUploadFileStore(tusStoreDirectory),
       maxChunkSize: chunkSize,
     );
 
     print("Starting upload");
     await client.upload(
-      onStart: (client,estimate) => nm.updateProgressBarFor(filePath, 0, context),
+      onFileUploadStart: (client,estimate) => nm.updateProgressBarFor(uploadDirectoryPath, 0, context),
 
-      onProgress: throttle((progress, _) {
-        nm.updateProgressBarFor(filePath, progress, context);
+      onDirectoryUploadProgress: throttle((totalProgress, _) {
+        nm.updateProgressBarFor(uploadDirectoryPath, totalProgress, context);
       }, const Duration(seconds: 1)), // Ensure that the progressBar won't be called more than once per second.
 
-      onComplete: () async {
+      onFileUploadComplete: () async {
         print("Completed!");
-        nm.removeNotificationIdFor(filePath);
-        tempDirectory.deleteSync(recursive: true);
-        // setState(() => _fileUrl = _client.uploadUrl);
+        nm.removeNotificationIdFor(uploadDirectoryPath);
       },
 
-      uri: Uri.parse(context.tusdServerUrl),
+      uri: context.tusdServerUrl,
       metadata: {
         'testMetaData': 'testMetaData',
         'testMetaData2': 'testMetaData2',
@@ -148,4 +168,54 @@ void callbackDispatcher() {
     );
     return Future.value(true);
   });
+}
+
+foreGroundWorkManagerForDebugging(inputData) async {
+  print("PRINT FROM WORK MANAGER");
+  final DirectoryUploadInput context = DirectoryUploadInput.getAsObject(inputData!);
+  final NotificationManager nm = NotificationManager();
+
+  final tusStoreDirectory = context.tusStoreDirectory;
+
+  final uploadDirectoryPath = inputData['upload_directory_path']!;
+  final uploadDirectory = new Directory(uploadDirectoryPath);
+  final chunkSize = inputData['chunk_size'] ?? (512 * 1024); // 512 kB by default
+
+  if (!tusStoreDirectory.existsSync()) {
+    tusStoreDirectory.createSync(recursive: true);
+  }
+
+  final client = DirectoryUploadClient(
+    uploadDirectory,
+    store: DirectoryUploadFileStore(tusStoreDirectory),
+    maxChunkSize: chunkSize,
+  );
+
+  client.setUploadData(context.tusdServerUrl, null, null);
+
+  print("Starting upload");
+  await client.upload(
+    onFileUploadStart: (client,estimate) => nm.updateProgressBarFor(uploadDirectoryPath, 0, context),
+
+    onDirectoryUploadProgress: throttle((totalProgress, _) {
+      nm.updateProgressBarFor(uploadDirectoryPath, totalProgress, context);
+    }, const Duration(seconds: 1)), // Ensure that the progressBar won't be called more than once per second.
+
+    onFileUploadComplete: () async {
+      print("Completed!");
+      nm.removeNotificationIdFor(uploadDirectoryPath);
+    },
+
+    uri: context.tusdServerUrl,
+    metadata: {
+      'testMetaData': 'testMetaData',
+      'testMetaData2': 'testMetaData2',
+    },
+    headers: {
+      'testHeaders': 'testHeaders',
+      'testHeaders2': 'testHeaders2',
+    },
+    measureUploadSpeed: false,
+  );
+  return Future.value(true);
 }

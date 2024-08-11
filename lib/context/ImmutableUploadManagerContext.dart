@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-class ImmutableFileUploadManagerContext {
-  final String tusdServerUrl;
+class ImmutableUploadManagerContext {
+  final Uri tusdServerUrl;
   final Directory tusStoreDirectory;
   final String notificationChannelKey;
   late final String notificationChannelKeySilent;
@@ -16,7 +16,7 @@ class ImmutableFileUploadManagerContext {
   final Color? notificationDefaultColor;
   final Int64List? notificationVibrationPattern;
 
-  ImmutableFileUploadManagerContext({
+  ImmutableUploadManagerContext({
     required this.tusdServerUrl,
     required this.tusStoreDirectory,
     required this.notificationChannelKey,
@@ -34,8 +34,8 @@ class ImmutableFileUploadManagerContext {
 
   Map<String, dynamic> getAsMap() {
     Map<String,dynamic> map = {
-      'tusd_server_url': tusdServerUrl,
-      'tus_store_directory': tusStoreDirectory.path,
+      'tusd_server_url': tusdServerUrl.toString(),
+      'tus_store_directory_path': tusStoreDirectory.path,
       'notification_channel_key': notificationChannelKey,
       'notification_channel_group_key': notificationChannelGroupKey,
       'notification_channel_name': notificationChannelName,
@@ -51,10 +51,10 @@ class ImmutableFileUploadManagerContext {
     return map;
   }
 
-  static ImmutableFileUploadManagerContext getAsContext(Map<String, dynamic> input) {
-    return new ImmutableFileUploadManagerContext(
-      tusdServerUrl: input['tusd_server_url']!,
-      tusStoreDirectory: Directory(input['tus_store_directory']!),
+  static ImmutableUploadManagerContext getAsContext(Map<String, dynamic> input) {
+    return new ImmutableUploadManagerContext(
+      tusdServerUrl: Uri.parse(input['tusd_server_url']!),
+      tusStoreDirectory: Directory(input['tus_store_directory_path']!),
       notificationChannelKey: input['notification_channel_key']!,
       notificationChannelGroupKey: input['notification_channel_group_key']!,
       notificationChannelName: input['notification_channel_name'],
@@ -67,4 +67,4 @@ class ImmutableFileUploadManagerContext {
   }
 }
 
-typedef UploadContext = ImmutableFileUploadManagerContext;
+typedef UploadContext = ImmutableUploadManagerContext;

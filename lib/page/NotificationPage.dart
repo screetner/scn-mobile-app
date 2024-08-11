@@ -1,4 +1,9 @@
+import 'dart:io';
+
+import 'package:cross_file/cross_file.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:tus_client_background_demo/model/DirectoryUploadManager.dart';
 
 class NotificationPage extends StatelessWidget {
   const NotificationPage({super.key});
@@ -26,22 +31,28 @@ class NotificationPage extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              // Define the action to be performed on button press
-              print('Create sample Files');
-            },
+            onPressed: () => _pickDirectory(),
             child: Text('Press Me'),
             style: ElevatedButton.styleFrom(
-              primary: Colors.blue, // Background color
-              onPrimary: Colors.white, // Text color
+              backgroundColor: Colors.blue, // Background color
+              foregroundColor: Colors.white, // Text color
               padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0), // Padding
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0), // Rounded corners
               ),
             ),
-          ),
+          )
         ],
       ),
     );
+  }
+
+  Future<void> _pickDirectory() async {
+    final chosenDir = '/data/data/com.example.tus_client_background_demo/app_flutter/records';
+
+    print("uploading directory: ${chosenDir}");
+    print("try create directory: ${new Directory(chosenDir)}");
+
+    await DirectoryUploadManager().uploadDirectory(uploadDirectory: Directory(chosenDir));
   }
 }

@@ -46,6 +46,8 @@ dependencies:
   video_thumbnail: ^0.5.3
   ffmpeg_kit_flutter: ^6.0.3
   path: ^1.9.0
+  file_picker: ^5.2.10
+  mockito: ^5.4.4
 
 dev_dependencies:
   flutter_test:

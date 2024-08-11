@@ -49,7 +49,7 @@ class DirectoryUploadFileStore implements DirectoryUploadStoreI {
   /// It must receive the directory to store the upload.
   DirectoryUploadFileStore(this.directory);
 
-  /// The directory where the upload  is stored.
+  /// The directory where the upload is stored.
   final Directory directory;
 
   /// Store a new [fingerprint] and its upload [uploadMap]. The [fingerprint] is
@@ -79,10 +79,6 @@ class DirectoryUploadFileStore implements DirectoryUploadStoreI {
 
     if (file.existsSync()) {
       file.deleteSync();
-    }
-
-    if (directory.existsSync()) {
-      directory.deleteSync(recursive: true);
     }
   }
 

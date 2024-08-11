@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 
-import '../context/ImmutableFileUploadManagerContext.dart';
+import '../context/ImmutableUploadManagerContext.dart';
 
 class NotificationManager {
   bool _isInitialized = false;
