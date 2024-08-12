@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -9,7 +8,7 @@ import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
 import 'package:ffmpeg_kit_flutter/media_information.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
-import '../context/ImmutableVideoRecordManagerContext.dart';
+import '../types/ImmutableVideoRecordManagerContext.dart';
 
 class VideoMetadataProvider {
   bool _isInitialized = false;

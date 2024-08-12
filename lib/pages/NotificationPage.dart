@@ -1,9 +1,7 @@
 import 'dart:io';
 
-import 'package:cross_file/cross_file.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:tus_client_background_demo/model/DirectoryUploadManager.dart';
+import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
 
 class NotificationPage extends StatelessWidget {
   const NotificationPage({super.key});
@@ -32,7 +30,7 @@ class NotificationPage extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () => _pickDirectory(),
-            child: Text('Press Me'),
+            child: Text('Press Me To Upload All'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue, // Background color
               foregroundColor: Colors.white, // Text color

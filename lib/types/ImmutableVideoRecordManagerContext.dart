@@ -8,7 +8,7 @@ class ImmutableVideoRecordManagerContext {
     required this.recordDirectory,
   }) { }
 
-  Map<String, dynamic> getAsMap() {
+  Map<String, dynamic> toJson() {
     Map<String,dynamic> map = {
       'recordDirectory': recordDirectory.path,
     };
@@ -18,7 +18,7 @@ class ImmutableVideoRecordManagerContext {
     return map;
   }
 
-  static ImmutableVideoRecordManagerContext getAsContext(Map<String, dynamic> input) {
+  static ImmutableVideoRecordManagerContext toObject(Map<String, dynamic> input) {
     return new ImmutableVideoRecordManagerContext(
       recordDirectory: Directory(input['recordDirectory']),
     );

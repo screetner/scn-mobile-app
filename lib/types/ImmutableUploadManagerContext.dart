@@ -32,7 +32,22 @@ class ImmutableUploadManagerContext {
     notificationChannelKeyAudible = notificationChannelKey + '-audible';
   }
 
-  Map<String, dynamic> getAsMap() {
+  ImmutableUploadManagerContext clone() {
+    return new ImmutableUploadManagerContext (
+      tusdServerUrl: this.tusdServerUrl,
+      tusStoreDirectory: this.tusStoreDirectory,
+      notificationChannelKey: this.notificationChannelKey,
+      notificationChannelGroupKey: this.notificationChannelGroupKey,
+      notificationChannelName: this.notificationChannelName,
+      notificationChannelGroupName: this.notificationChannelGroupName,
+      notificationChannelDescription: this.notificationChannelDescription,
+      notificationSoundSource: this.notificationSoundSource,
+      notificationDefaultColor: this.notificationDefaultColor,
+      notificationVibrationPattern: this.notificationVibrationPattern,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
     Map<String,dynamic> map = {
       'tusd_server_url': tusdServerUrl.toString(),
       'tus_store_directory_path': tusStoreDirectory.path,
@@ -51,7 +66,7 @@ class ImmutableUploadManagerContext {
     return map;
   }
 
-  static ImmutableUploadManagerContext getAsContext(Map<String, dynamic> input) {
+  static ImmutableUploadManagerContext toObject(Map<String, dynamic> input) {
     return new ImmutableUploadManagerContext(
       tusdServerUrl: Uri.parse(input['tusd_server_url']!),
       tusStoreDirectory: Directory(input['tus_store_directory_path']!),

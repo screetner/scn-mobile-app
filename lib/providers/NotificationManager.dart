@@ -2,12 +2,14 @@ import 'dart:math';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
 
-import '../context/ImmutableUploadManagerContext.dart';
+import '../types/ImmutableUploadManagerContext.dart';
 
 class NotificationManager {
   bool _isInitialized = false;
 
   final Map<String, int> _notificationIdMap = {};
+
+  late UploadContext _context;
 
   NotificationManager._privateConstructor();
 
@@ -22,40 +24,42 @@ class NotificationManager {
       return false;
     }
 
-    final String notificationChannelName = context.notificationChannelName ?? context.notificationChannelKey;
-    final String notificationChannelGroupName = context.notificationChannelGroupName ?? context.notificationChannelGroupKey;
-    final String notificationChannelDescription = context.notificationChannelDescription ??
+    _context = context.clone();
+
+    String notificationChannelName = _context.notificationChannelName ?? _context.notificationChannelKey;
+    String notificationChannelGroupName = _context.notificationChannelGroupName ?? _context.notificationChannelGroupKey;
+    String notificationChannelDescription = _context.notificationChannelDescription ??
         "NotificationPage.dart channel for reporting file upload progress";
 
     bool notificationsInitialized = await AwesomeNotifications().initialize(
       null, // default icon
       [
         NotificationChannel(
-          channelGroupKey: context.notificationChannelGroupKey,
-          channelKey: context.notificationChannelKeySilent,
+          channelGroupKey: _context.notificationChannelGroupKey,
+          channelKey: _context.notificationChannelKeySilent,
           channelName: notificationChannelName,
           channelDescription: notificationChannelDescription,
-          defaultColor: context.notificationDefaultColor,
-          soundSource: context.notificationSoundSource,
+          defaultColor: _context.notificationDefaultColor,
+          soundSource: _context.notificationSoundSource,
           playSound: false,
           enableVibration: false,
-          vibrationPattern: context.notificationVibrationPattern,
+          vibrationPattern: _context.notificationVibrationPattern,
         ),
         NotificationChannel(
-          channelGroupKey: context.notificationChannelGroupKey,
-          channelKey: context.notificationChannelKeyAudible,
+          channelGroupKey: _context.notificationChannelGroupKey,
+          channelKey: _context.notificationChannelKeyAudible,
           channelName: notificationChannelName,
           channelDescription: notificationChannelDescription,
-          defaultColor: context.notificationDefaultColor,
-          soundSource: context.notificationSoundSource,
+          defaultColor: _context.notificationDefaultColor,
+          soundSource: _context.notificationSoundSource,
           playSound: true,
           enableVibration: true,
-          vibrationPattern: context.notificationVibrationPattern,
+          vibrationPattern: _context.notificationVibrationPattern,
         ),
       ],
       channelGroups: [
         NotificationChannelGroup(
-          channelGroupKey: context.notificationChannelGroupKey,
+          channelGroupKey: _context.notificationChannelGroupKey,
           channelGroupName: notificationChannelGroupName,
         ),
       ],
@@ -67,13 +71,12 @@ class NotificationManager {
 
   // credits to awesome-notification documentation
   // link: https://awesome-notification-docs.vercel.app/
-  void updateProgressBarFor(String filePath, double progressPercentage, UploadContext context) {
+  void updateProgressBarFor(String fingerprint, double progressPercentage) {
     const double maxPercentage = 100;
 
-    final id = getNotificationIdFor(filePath);
-    final fileName = filePath.split('/').last;
+    final id = getNotificationIdFor(fingerprint);
+    final fileName = fingerprint.split('/').last;
 
-    print("UPDATE PROGRESS BAR");
     print("PROGRESS PERCENTAGE: $progressPercentage");
 
     if (progressPercentage < maxPercentage) {
@@ -81,8 +84,8 @@ class NotificationManager {
       AwesomeNotifications().createNotification(
         content: NotificationContent(
           id: id,
-          channelKey: context.notificationChannelKeySilent,
-          groupKey: context.notificationChannelGroupKey,
+          channelKey: _context.notificationChannelKeySilent,
+          groupKey: _context.notificationChannelGroupKey,
           title: 'Uploading ${fileName} ${progress.toInt()}%',
           body: 'fanum tax',
           category: NotificationCategory.Progress,
@@ -92,16 +95,15 @@ class NotificationManager {
         ),
       );
     } else {
-      print("CREATING ALERT NOTIFICATION");
       AwesomeNotifications().createNotification(
         content: NotificationContent(
           id: id,
-          channelKey: context.notificationChannelKeyAudible,
-          groupKey: context.notificationChannelGroupKey,
+          channelKey: _context.notificationChannelKeyAudible,
+          groupKey: _context.notificationChannelGroupKey,
           title: 'Upload ${fileName} finished',
           body: 'skibidi',
           category: NotificationCategory.Progress,
-          notificationLayout: NotificationLayout.ProgressBar,
+          notificationLayout: NotificationLayout.Default,
           locked: false,
         ),
       );

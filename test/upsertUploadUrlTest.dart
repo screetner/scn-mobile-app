@@ -6,10 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:tus_client_background_demo/main.dart';
-import 'package:tus_client_background_demo/model/DirectoryUploadClient.dart';
+import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
 import 'package:path/path.dart' as path;
-import 'package:tus_client_background_demo/model/DirectoryUploadManager.dart';
-import 'package:tus_client_background_demo/model/DirectoryUploadStore.dart';
+import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
+import 'package:tus_client_background_demo/services/models/DirectoryUploadStateStore.dart';
 
 void main() {
   // testWidgets('Counter increments smoke test', (WidgetTester tester) async {

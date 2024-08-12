@@ -1,18 +1,19 @@
 
 import 'dart:typed_data';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:mockito/mockito.dart';
 import 'package:http/http.dart' as http;
 import 'package:tus_client_dart/tus_client_dart.dart'; // Replace with the correct import for TusClient
 
 class MockTusClient extends Mock implements TusClient {
-  TusClient(
-      super.file, {
-        super.store,
-        super.maxChunkSize = 512 * 1024,
-        super.retries = 0,
-        super.retryScale = RetryScale.constant,
-        super.retryInterval = 0,
+  MockTusClient(
+      this.file, {
+        this.store,
+        this.maxChunkSize = 512 * 1024,
+        this.retries = 0,
+        this.retryScale = RetryScale.constant,
+        this.retryInterval = 0,
       });
 
   /// Override this method to use a custom Client
@@ -95,4 +96,22 @@ class MockTusClient extends Mock implements TusClient {
 
   /// The 'Upload-Metadata' header sent to the server.
   String get uploadMetadata => _uploadMetadata ?? "";
+
+  /// Storage used to save and retrieve upload URLs by its fingerprint.
+  final TusStore? store;
+
+  /// File to upload, must be in[XFile] type
+  final XFile file;
+
+  /// The maximum payload size in bytes when uploading the file in chunks (512KB)
+  final int maxChunkSize;
+
+  /// The number of times that should retry to resume the upload if a failure occurs after rethrow the error.
+  final int retries;
+
+  /// The interval between the first error and the first retry in [seconds].
+  final int retryInterval;
+
+  /// The scale type used to increase the interval of time between every retry.
+  final RetryScale retryScale;
 }

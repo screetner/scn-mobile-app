@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cross_file/cross_file.dart';
-import 'package:tus_client_background_demo/context/ImmutableDirectoryUploadInput.dart';
-import 'package:tus_client_background_demo/model/DirectoryUploadClient.dart';
-import 'package:tus_client_background_demo/model/NotificationManager.dart';
-import 'package:tus_client_dart/tus_client_dart.dart';
+import 'package:tus_client_background_demo/types/ImmutableDirectoryUploadInput.dart';
+import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
+import 'package:tus_client_background_demo/providers/NotificationManager.dart';
 import 'package:workmanager/workmanager.dart';
 
-import '../context/ImmutableUploadManagerContext.dart';
-import 'DirectoryUploadStore.dart';
+import '../types/ImmutableUploadManagerContext.dart';
 
 class DirectoryUploadManager {
   bool _isInitialized = false;
@@ -48,28 +45,26 @@ class DirectoryUploadManager {
   }
 
   Future<void> uploadDirectory({required Directory uploadDirectory, int? chunkSize}) async {
-    Map<String, dynamic> inputMap = getWorkmanagerContext(uploadDirectory: uploadDirectory, chunkSize: chunkSize).getAsMap();
-    // inputData['chunk_size'] = (512 * 1024);
+    Map<String, dynamic> inputData = getWorkmanagerContext(uploadDirectory: uploadDirectory, chunkSize: chunkSize).toJson();
 
     print("EXECUTE UPLOAD DIRECTORY ON WORK MANAGER");
-    // Workmanager().registerOneOffTask(getTaskUniqueName(uploadDirectoryPath),'_',
-    //     constraints: Constraints(networkType: NetworkType.connected),
-    //     inputData: contextMap,
-    //     existingWorkPolicy: ExistingWorkPolicy.replace);
-    // // TODO: change ExistingWorkPolicy from replace to keep
-
-    await foreGroundWorkManagerForDebugging(inputMap);
+    Workmanager().registerOneOffTask(getTaskUniqueName(uploadDirectory.path),'_',
+        constraints: Constraints(networkType: NetworkType.connected),
+        inputData: inputData,
+        existingWorkPolicy: ExistingWorkPolicy.keep);
+    // TODO: change ExistingWorkPolicy from replace to keep
 
     print("WORK MANAGER CALLED");
 
   }
 
-  // Future<void> cancelUpload(String filePath) async {
-  //   Workmanager().cancelByUniqueName(getTaskUniqueName(filePath));
-  // }
+  Future<void> cancelUpload(String filePath) async {
+    // TODO: cancel the client gracefully
+    Workmanager().cancelByUniqueName(getTaskUniqueName(filePath));
+  }
 
   Future<void> pauseUpload(String filePath) async {
-    // TODO: pause each tus client
+    // TODO: pause each tus gracefully
     Workmanager().cancelByUniqueName(getTaskUniqueName(filePath));
     NotificationManager().removeNotificationIdFor(filePath);
   }
@@ -122,100 +117,61 @@ dynamic Function(double, Duration) throttle(dynamic Function(double, Duration) c
 @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    print("PRINT FROM WORK MANAGER");
-    final DirectoryUploadInput context = DirectoryUploadInput.getAsObject(inputData!);
+    print("ENTERS, WORKMANAGER");
+    final DirectoryUploadInput uploadInput = DirectoryUploadInput.toObject(inputData!);
+    final UploadContext uploadContext = UploadContext.toObject(inputData);
+
+    // TODO: Somehow the workmanager fails occasionally when running app in background.
+    //  Perhaps it is because the notification manager is deconstruct and make
+    //  all methods notification methods inaccessible.
+    await NotificationManager().initialize(uploadContext);
     final NotificationManager nm = NotificationManager();
 
-    final tusStoreDirectory = context.tusStoreDirectory;
+    final storeDirectory = uploadInput.tusStoreDirectory;
 
-    final uploadDirectory = context.uploadDirectory;
+    final uploadDirectory = uploadInput.uploadDirectory;
     final uploadDirectoryPath = uploadDirectory.path;
-    final chunkSize = context.chunkSize ?? 512 * 1024;
+    final nmFingerprint = uploadDirectoryPath;
+    final chunkSize = uploadInput.chunkSize ?? (512 * 1024); // 512 kB by default
 
-    if (!tusStoreDirectory.existsSync()) {
-      tusStoreDirectory.createSync(recursive: true);
+    if (!storeDirectory.existsSync()) {
+      storeDirectory.createSync(recursive: true);
     }
 
     final client = DirectoryUploadClient(
       uploadDirectory,
-      store: DirectoryUploadFileStore(tusStoreDirectory),
+      storeDirectory: storeDirectory,
       maxChunkSize: chunkSize,
     );
 
-    print("Starting upload");
-    await client.upload(
-      onFileUploadStart: (client,estimate) => nm.updateProgressBarFor(uploadDirectoryPath, 0, context),
+    final uploadProgress = client.getUploadProgressPercentage;
 
-      onDirectoryUploadProgress: throttle((totalProgress, _) {
-        nm.updateProgressBarFor(uploadDirectoryPath, totalProgress, context);
+    await client.upload(
+      onFileUploadStart: (client,estimate) => nm.updateProgressBarFor(nmFingerprint, uploadProgress()),
+
+      onFileUploadProgress: throttle((progressPercentage, estimate) {
+        nm.updateProgressBarFor(nmFingerprint, uploadProgress());
       }, const Duration(seconds: 1)), // Ensure that the progressBar won't be called more than once per second.
 
-      onFileUploadComplete: () async {
-        print("Completed!");
-        nm.removeNotificationIdFor(uploadDirectoryPath);
+      onFileUploadComplete: () {
+        nm.updateProgressBarFor(nmFingerprint, uploadProgress());
+        print("UPLOAD FINISHED");
       },
 
-      uri: context.tusdServerUrl,
-      metadata: {
+      tusServerUri: uploadInput.tusdServerUrl,
+      genericMetadata: {
         'testMetaData': 'testMetaData',
         'testMetaData2': 'testMetaData2',
       },
-      headers: {
+      genericHeaders: {
         'testHeaders': 'testHeaders',
         'testHeaders2': 'testHeaders2',
       },
       measureUploadSpeed: false,
     );
+
+    nm.removeNotificationIdFor(nmFingerprint);
+
     return Future.value(true);
   });
-}
-
-foreGroundWorkManagerForDebugging(inputData) async {
-  print("PRINT FROM WORK MANAGER");
-  final DirectoryUploadInput context = DirectoryUploadInput.getAsObject(inputData!);
-  final NotificationManager nm = NotificationManager();
-
-  final tusStoreDirectory = context.tusStoreDirectory;
-
-  final uploadDirectoryPath = inputData['upload_directory_path']!;
-  final uploadDirectory = new Directory(uploadDirectoryPath);
-  final chunkSize = inputData['chunk_size'] ?? (512 * 1024); // 512 kB by default
-
-  if (!tusStoreDirectory.existsSync()) {
-    tusStoreDirectory.createSync(recursive: true);
-  }
-
-  final client = DirectoryUploadClient(
-    uploadDirectory,
-    store: DirectoryUploadFileStore(tusStoreDirectory),
-    maxChunkSize: chunkSize,
-  );
-
-  client.setUploadData(context.tusdServerUrl, null, null);
-
-  print("Starting upload");
-  await client.upload(
-    onFileUploadStart: (client,estimate) => nm.updateProgressBarFor(uploadDirectoryPath, 0, context),
-
-    onDirectoryUploadProgress: throttle((totalProgress, _) {
-      nm.updateProgressBarFor(uploadDirectoryPath, totalProgress, context);
-    }, const Duration(seconds: 1)), // Ensure that the progressBar won't be called more than once per second.
-
-    onFileUploadComplete: () async {
-      print("Completed!");
-      nm.removeNotificationIdFor(uploadDirectoryPath);
-    },
-
-    uri: context.tusdServerUrl,
-    metadata: {
-      'testMetaData': 'testMetaData',
-      'testMetaData2': 'testMetaData2',
-    },
-    headers: {
-      'testHeaders': 'testHeaders',
-      'testHeaders2': 'testHeaders2',
-    },
-    measureUploadSpeed: false,
-  );
-  return Future.value(true);
 }

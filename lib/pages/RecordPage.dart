@@ -4,9 +4,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import 'package:tus_client_background_demo/model/VideoMetadataProvider.dart';
+import 'package:tus_client_background_demo/providers/VideoMetadataProvider.dart';
 import 'package:wakelock/wakelock.dart';
 
 class RecordPage extends StatefulWidget {

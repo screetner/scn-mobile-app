@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:tus_client_background_demo/context/ImmutableUploadManagerContext.dart';
+import 'package:tus_client_background_demo/types/ImmutableUploadManagerContext.dart';
 import 'package:tus_client_dart/tus_client_dart.dart';
 
 class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
@@ -30,9 +30,9 @@ class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
     Int64List? super.notificationVibrationPattern,
   }) {}
 
-  Map<String, dynamic> getAsMap() {
+  Map<String, dynamic> toJson() {
     Map<String,dynamic> map = {
-      ...super.getAsMap(),
+      ...super.toJson(),
       'upload_directory_path': uploadDirectory.path,
       'chunk_size': chunkSize,
     };
@@ -42,8 +42,8 @@ class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
     return map;
   }
 
-  static ImmutableDirectoryUploadInput getAsObject(Map<String, dynamic> input) {
-    final uploadContext = ImmutableUploadManagerContext.getAsContext(input);
+  static ImmutableDirectoryUploadInput toObject(Map<String, dynamic> input) {
+    final uploadContext = ImmutableUploadManagerContext.toObject(input);
 
     return new ImmutableDirectoryUploadInput(
       uploadDirectory: Directory(input['upload_directory_path']!),

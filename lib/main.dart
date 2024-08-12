@@ -6,13 +6,14 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:tus_client_background_demo/context/ImmutableVideoRecordManagerContext.dart';
-import 'package:tus_client_background_demo/model/DirectoryUploadManager.dart';
+import 'package:tus_client_background_demo/types/ImmutableVideoRecordManagerContext.dart';
+import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
 
-import 'context/ImmutableUploadManagerContext.dart';
-import 'model/VideoMetadataProvider.dart';
-import 'presentation/ScreetnerMainApp.dart';
+import 'types/ImmutableUploadManagerContext.dart';
+import 'providers/VideoMetadataProvider.dart';
+import 'presentations/ScreetnerMainApp.dart';
 
 
 Future<void> main() async {
@@ -33,7 +34,7 @@ Future<void> main() async {
 Future<UploadContext> getEnvUploadContext() async {
   return new UploadContext(
     tusdServerUrl: Uri.parse(dotenv.env['TUSD_SERVER_URL']!),
-    tusStoreDirectory: Directory(dotenv.env['TUS_STORE_DIRECTORY'] ?? (await getApplicationDocumentsDirectory()).path),
+    tusStoreDirectory: Directory(dotenv.env['TUS_STORE_DIRECTORY'] ?? path.join((await getApplicationSupportDirectory()).path, 'tusStore')),
     notificationChannelKey: dotenv.env['NOTIFICATION_CHANNEL_KEY'] ?? 'scn-mobile-app-progress-notification',
     notificationChannelGroupKey: dotenv.env['NOTIFICATION_CHANNEL_GROUP_KEY'] ?? 'scn-mobile-app',
     notificationChannelName: dotenv.env['NOTIFICATION_CHANNEL_NAME'],
@@ -51,7 +52,7 @@ Future<UploadContext> getEnvUploadContext() async {
 
 
 Future<RecordContext> getEnvRecordContext() async {
-  return new RecordContext(recordDirectory: new Directory((await getApplicationDocumentsDirectory()).path + '/records'));
+  return new RecordContext(recordDirectory: new Directory(path.join((await getApplicationDocumentsDirectory()).path, 'records')));
 }
 
 Future<void> requestNotificationPermission() async {

@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:tus_client_background_demo/model/VideoMetadataProvider.dart';
+import 'package:tus_client_background_demo/providers/VideoMetadataProvider.dart';
 
 class HomePage extends StatefulWidget {
   @override
