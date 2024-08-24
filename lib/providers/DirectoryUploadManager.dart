@@ -47,15 +47,14 @@ class DirectoryUploadManager {
   Future<void> uploadDirectory({required Directory uploadDirectory, int? chunkSize}) async {
     Map<String, dynamic> inputData = getWorkmanagerContext(uploadDirectory: uploadDirectory, chunkSize: chunkSize).toJson();
 
-    print("EXECUTE UPLOAD DIRECTORY ON WORK MANAGER");
+    print("EXECUTE UPLOAD DIRECTORY ON WORK MANAGER: " + getTaskUniqueName(uploadDirectory.path));
     Workmanager().registerOneOffTask(getTaskUniqueName(uploadDirectory.path),'_',
         constraints: Constraints(networkType: NetworkType.connected),
         inputData: inputData,
-        existingWorkPolicy: ExistingWorkPolicy.keep);
+        existingWorkPolicy: ExistingWorkPolicy.replace);
     // TODO: change ExistingWorkPolicy from replace to keep
 
     print("WORK MANAGER CALLED");
-
   }
 
   Future<void> cancelUpload(String filePath) async {
@@ -117,61 +116,68 @@ dynamic Function(double, Duration) throttle(dynamic Function(double, Duration) c
 @pragma('vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    print("ENTERS, WORKMANAGER");
-    final DirectoryUploadInput uploadInput = DirectoryUploadInput.toObject(inputData!);
-    final UploadContext uploadContext = UploadContext.toObject(inputData);
+    try {
+      print("ENTERS, WORKMANAGER");
+      final DirectoryUploadInput uploadInput = DirectoryUploadInput.toObject(
+          inputData!);
+      final UploadContext uploadContext = UploadContext.toObject(inputData);
 
-    // TODO: Somehow the workmanager fails occasionally when running app in background.
-    //  Perhaps it is because the notification manager is deconstruct and make
-    //  all methods notification methods inaccessible.
-    await NotificationManager().initialize(uploadContext);
-    final NotificationManager nm = NotificationManager();
+      final NotificationManager nm = await NotificationManager.buildInstance(uploadContext);
 
-    final storeDirectory = uploadInput.tusStoreDirectory;
+      final storeDirectory = uploadInput.tusStoreDirectory;
 
-    final uploadDirectory = uploadInput.uploadDirectory;
-    final uploadDirectoryPath = uploadDirectory.path;
-    final nmFingerprint = uploadDirectoryPath;
-    final chunkSize = uploadInput.chunkSize ?? (512 * 1024); // 512 kB by default
+      final uploadDirectory = uploadInput.uploadDirectory;
+      final uploadDirectoryPath = uploadDirectory.path;
+      final nmFingerprint = uploadDirectoryPath;
+      final chunkSize = uploadInput.chunkSize ??
+          (512 * 1024); // 512 kB by default
 
-    if (!storeDirectory.existsSync()) {
-      storeDirectory.createSync(recursive: true);
+      if (!storeDirectory.existsSync()) {
+        storeDirectory.createSync(recursive: true);
+      }
+
+      final client = DirectoryUploadClient(
+        uploadDirectory,
+        storeDirectory: storeDirectory,
+        maxChunkSize: chunkSize,
+      );
+
+      final uploadProgress = client.getUploadProgressPercentage;
+
+      await client.upload(
+        onFileUploadStart: (client, estimate) =>
+            nm.updateProgressBarFor(nmFingerprint, uploadProgress()),
+
+        onFileUploadProgress: throttle((progressPercentage, estimate) {
+          nm.updateProgressBarFor(nmFingerprint, uploadProgress());
+        }, const Duration(seconds: 1)),
+        // Ensure that the progressBar won't be called more than once per second.
+
+        onFileUploadComplete: () {
+          nm.updateProgressBarFor(nmFingerprint, uploadProgress());
+          print("UPLOAD FINISHED");
+        },
+
+        tusServerUri: uploadInput.tusdServerUrl,
+        genericMetadata: {
+          'testMetaData': 'testMetaData',
+          'testMetaData2': 'testMetaData2',
+        },
+        genericHeaders: {
+          'testHeaders': 'testHeaders',
+          'testHeaders2': 'testHeaders2',
+        },
+        measureUploadSpeed: false,
+      );
+
+      nm.removeNotificationIdFor(nmFingerprint);
+
+      return Future.value(true);
+    } catch (e, stackTrace) {
+      // TODO: implement error handling
+      print('An error occurred: $e');
+      print('Stack trace: $stackTrace');
+      throw e;
     }
-
-    final client = DirectoryUploadClient(
-      uploadDirectory,
-      storeDirectory: storeDirectory,
-      maxChunkSize: chunkSize,
-    );
-
-    final uploadProgress = client.getUploadProgressPercentage;
-
-    await client.upload(
-      onFileUploadStart: (client,estimate) => nm.updateProgressBarFor(nmFingerprint, uploadProgress()),
-
-      onFileUploadProgress: throttle((progressPercentage, estimate) {
-        nm.updateProgressBarFor(nmFingerprint, uploadProgress());
-      }, const Duration(seconds: 1)), // Ensure that the progressBar won't be called more than once per second.
-
-      onFileUploadComplete: () {
-        nm.updateProgressBarFor(nmFingerprint, uploadProgress());
-        print("UPLOAD FINISHED");
-      },
-
-      tusServerUri: uploadInput.tusdServerUrl,
-      genericMetadata: {
-        'testMetaData': 'testMetaData',
-        'testMetaData2': 'testMetaData2',
-      },
-      genericHeaders: {
-        'testHeaders': 'testHeaders',
-        'testHeaders2': 'testHeaders2',
-      },
-      measureUploadSpeed: false,
-    );
-
-    nm.removeNotificationIdFor(nmFingerprint);
-
-    return Future.value(true);
   });
 }

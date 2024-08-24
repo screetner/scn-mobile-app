@@ -15,6 +15,10 @@ class NotificationManager {
 
   static final NotificationManager _instance = NotificationManager._privateConstructor();
 
+  NotificationManager._withContext(UploadContext context) {
+    _context = context.clone();
+  }
+
   factory NotificationManager() {
     return _instance;
   }
@@ -67,6 +71,12 @@ class NotificationManager {
 
     _isInitialized = notificationsInitialized;
     return notificationsInitialized;
+  }
+
+  static Future<NotificationManager> buildInstance(UploadContext context) async {
+    final nm = NotificationManager._withContext(context);
+    await nm.initialize(context);
+    return nm;
   }
 
   // credits to awesome-notification documentation
