@@ -1,20 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../pages/HomePage.dart';
+import '../pages/LoginPage.dart';
 import '../pages/NotificationPage.dart';
 import '../pages/RecordPage.dart';
 
 class ScreetnerMainApp extends StatelessWidget {
-  const ScreetnerMainApp({super.key});
+  ScreetnerMainApp({super.key});
+  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+
+
+  Future<String?> _getAccessToken() async {
+    final accessToken = await secureStorage
+        .read(key: 'accessToken');
+    return accessToken;
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(useMaterial3: true),
-      home: const ScreetnerHome(),
+      home: FutureBuilder<String?>(
+        future: _getAccessToken(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasData && snapshot.data != null) {
+            return const ScreetnerHome();
+          } else {
+            return LoginPage();
+          }
+        },
+      ),
     );
-  }
-}
+  }}
 
 class ScreetnerHome extends StatefulWidget {
   const ScreetnerHome({super.key});
