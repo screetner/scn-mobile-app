@@ -48,6 +48,8 @@ dependencies:
   file_picker: ^5.2.10
   mockito: ^5.4.4
   tus_client_dart: ^2.5.0
+  dio: ^5.6.0
+  flutter_secure_storage: ^8.1.0
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +74,7 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/images/logo2.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
