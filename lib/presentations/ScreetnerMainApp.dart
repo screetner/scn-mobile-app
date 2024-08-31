@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../page/HomePage.dart';
-import '../page/MessagePage.dart';
-import '../page/NotificationPage.dart';
-import '../page/RecordPage.dart';
+import '../pages/HomePage.dart';
+import '../pages/NotificationPage.dart';
+import '../pages/RecordPage.dart';
 
 class ScreetnerMainApp extends StatelessWidget {
   const ScreetnerMainApp({super.key});
@@ -32,8 +31,8 @@ class _ScreetnerHomeState extends State<ScreetnerHome> {
     return Scaffold(
       body: <Widget>[
         HomePage(),
+        RecordPage(),
         NotificationPage(),
-        MessagePage(),
       ][currentPageIndex],
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
