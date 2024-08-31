@@ -35,6 +35,7 @@ class _HomePageState extends State<HomePage> {
 
           final items = snapshot.data!;
           return ListView.builder(
+            padding: const EdgeInsets.all(16.0),
             itemCount: items.length,
             itemBuilder: (context, index) {
               return _buildVideoCard(context, items[index]);
@@ -46,15 +47,23 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildVideoCard(BuildContext context, VideoInfo videoInfo) {
-    Widget subtitle = Text(videoInfo.videoLength != null ?
-        videoInfo.videoLength!.toString().split('.').first :
-        "N/A");
-
     return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
         leading: _buildThumbnail(videoInfo.thumbnail),
-        title: Text(videoInfo.videoTitle ?? "untitled"), // Replace with actual video title
-        subtitle: subtitle,
+        title: Text(
+          videoInfo.videoTitle ?? "Untitled",
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          _formatDuration(videoInfo.videoLength),
+          style: const TextStyle(color: Colors.grey),
+        ),
         onTap: () {
           // Handle tap event
         },
@@ -62,34 +71,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   Widget _buildThumbnail(Uint8List? thumbnailData) {
-    if (thumbnailData != null) {
-      return Image.memory(
-        thumbnailData,
-        width: 100, // Adjust as needed
-        height: 100, // Adjust as needed
-        fit: BoxFit.cover,
-      );
-    } else {
-      // Placeholder or default image when thumbnailData is null
-      return Container(
-        width: 100, // Adjust as needed
-        height: 100, // Adjust as needed
-        color: Colors.grey, // Placeholder color
-        child: Icon(Icons.video_library, size: 50, color: Colors.greenAccent),
-      );
-    }
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(8),
+        image: thumbnailData != null
+            ? DecorationImage(
+          image: MemoryImage(thumbnailData),
+          fit: BoxFit.cover,
+        )
+            : null,
+      ),
+      child: thumbnailData == null
+          ? Icon(
+        Icons.video_library,
+        size: 50,
+        color: Colors.greenAccent,
+      )
+          : null,
+    );
   }
 
-  String _formatDuration(Duration duration) {
-    return duration.toString();
-
-    // String twoDigits(int n) => n.toString().padLeft(2, '0');
-    //
-    // String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    // String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    //
-    // return '${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds';
+  String _formatDuration(Duration? duration) {
+    if (duration == null) return "N/A";
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds.remainder(60);
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }

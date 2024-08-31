@@ -38,14 +38,21 @@ class ApiClient {
   }
 
   Future<String?> _getAccessToken() async {
-    final accessToken = await secureStorage.read(key: 'accessToken');
-    return accessToken;
+    try {
+      final accessToken = await secureStorage.read(key: 'accessToken');
+      return accessToken;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<String?> _getRefreshToken() async {
-    final refreshToken = await secureStorage.read(key: 'refreshToken');
-    return refreshToken;
+    try {
+      final refreshToken = await secureStorage.read(key: 'refreshToken');
+      return refreshToken;
+    } catch (e) {
+      return null;
+    }
   }
-
   Dio get dio => _dio;
 }

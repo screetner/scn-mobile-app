@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../presentations/ScreetnerMainApp.dart';
 import '../services/Auth.dart';
 import '../types/api/Auth.dart';
 
@@ -19,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   final authService = Auth();
 
-  void _login() async {
+  void _login(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -30,17 +31,19 @@ class _LoginPageState extends State<LoginPage> {
         final response = await authService.login(loginDto);
         await secureStorage.write(key: 'accessToken', value: response.accessToken);
         await secureStorage.write(key: 'refreshToken', value: response.refreshToken);
+        await secureStorage.write(key: 'username', value: response.username);
+        await secureStorage.write(key: 'orgName', value: response.orgName);
+        await secureStorage.write(key: 'role', value: response.roleName);
 
-        // You may want to navigate to the home page or dashboard after a successful login
-        // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ScreetnerHome()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ScreetnerHome()));
       } catch (error) {
         print('Login failed: $error');
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(
-        //     content: Text('Login failed: $error'),
-        //     backgroundColor: Colors.redAccent,
-        //   ),
-        // );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: $error'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
       } finally {
         setState(() {
           _isLoading = false;
@@ -99,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
                 _isLoading
                     ? const CircularProgressIndicator(color: Colors.blueAccent)
                     : ElevatedButton(
-                  onPressed: _login,
+                  onPressed: () => _login(context),
                   child: const Text('Login'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
