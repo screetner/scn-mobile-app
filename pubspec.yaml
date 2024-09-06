@@ -40,16 +40,15 @@ dependencies:
   awesome_notifications: ^0.9.3+1
   permission_handler: ^11.3.1
   flutter_dotenv: ^5.1.0
-  camera: ^0.11.0+1
-  wakelock: ^0.6.2
-  video_thumbnail: ^0.5.3
-  ffmpeg_kit_flutter: ^6.0.3
   path: ^1.9.0
   file_picker: ^5.2.10
   mockito: ^5.4.4
   tus_client_dart: ^2.5.0
   dio: ^5.6.0
   flutter_secure_storage: ^8.1.0
+  geolocator: ^13.0.1
+  image: ^4.2.0
+  camera: ^0.11.0+2
 
 dev_dependencies:
   flutter_test:
@@ -74,7 +73,7 @@ flutter:
   uses-material-design: true
   assets:
     - .env
-    - assets/images/logo2.png
+    - assets/images/logo.jpg
 
   # To add assets to your application, add an assets section, like this:
   # assets:

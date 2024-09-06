@@ -4,9 +4,10 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart' as path;
-import 'package:tus_client_background_demo/providers/VideoMetadataProvider.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:tus_client_background_demo/providers/ImageLocationRecordController.dart';
+
+// TODO: uncomment this
+// import 'package:wakelock/wakelock.dart';
 
 class RecordPage extends StatefulWidget {
   const RecordPage({super.key});
@@ -17,7 +18,6 @@ class RecordPage extends StatefulWidget {
 
 class _RecordPageState extends State<RecordPage> {
   List<CameraDescription>? _cameras;
-  CameraController? _controller;
 
   XFile? videoFile;
 
@@ -26,15 +26,16 @@ class _RecordPageState extends State<RecordPage> {
   late Directory appDirectory;
   late String videoDirectoryPath;
 
+  ImageLocationRecordController? _controller;
+
   void initState() {
     super.initState();
 
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
     ]);
 
-    _initializeCameras();
+    _initializeImageLocationRecordController();
   }
 
   @override
@@ -47,7 +48,10 @@ class _RecordPageState extends State<RecordPage> {
 
   @override
   Widget build(BuildContext context) {
+    print("building record page");
+
     if(_controller == null) {
+      print('controller is null');
       return Container(
         color: Colors.black,
         child: Center(
@@ -69,134 +73,85 @@ class _RecordPageState extends State<RecordPage> {
   Widget _cameraPreviewWidget() {
     // credits to Adam Vidarsson on Medium
     // link: https://medium.com/lightsnap/making-a-full-screen-camera-application-in-flutter-65db7f5d717b
-    final size = MediaQuery.of(context).size;
-    final deviceRatio = size.width / size.height;
-    final xScale = _controller!.value.aspectRatio / deviceRatio;
-    // Modify the yScale if you are in Landscape
-    final yScale = 1.0;
 
-    return Container(
-      child: AspectRatio(
-        aspectRatio: deviceRatio,
-        child: Transform(
-          alignment: Alignment.center,
-          transform: Matrix4.diagonal3Values(xScale, yScale, 1),
-          child: CameraPreview(_controller!),
+    print("building camera preview widget");
+    final mediaSize = MediaQuery.of(context).size;
+    final scale = 1 / (_controller!.cameraController.value.aspectRatio * mediaSize.aspectRatio);
+    return ClipRect(
+      clipper: _MediaSizeClipper(mediaSize),
+      child: Container(
+        color: Colors.black,
+        child: Transform.scale(
+          scale: scale,
+          alignment: Alignment.topCenter,
+          child: _controller!.cameraPreview,
         ),
       ),
     );
   }
 
   Widget _captureControlRowWidget() {
-    return Positioned(
-      bottom: 16.0,
-      left: 0,
-      right: 0,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.videocam),
-            iconSize: 48.0,
-            color: (_controller!.value.isRecordingVideo) ? Colors.red : Colors.blue,
-            onPressed: _onVideoRecordButtonPressed,
-          ),
-        ],
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.videocam),
+              iconSize: 48.0,
+              color: (_controller!.isRecording) ? Colors.red : Colors.blue,
+              onPressed: _onVideoRecordButtonPressed,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _onVideoRecordButtonPressed() {
-    if(!_controller!.value.isRecordingVideo) {
-      print("SKIBIDI");
-      _startVideoRecording().then((_) {
+    if(_controller!.isRecording) {
+      // TODO: disable wakelock
+      _controller!.stopRecording().then((_) {
         if (mounted) {
           setState(() {});
         }
       });
     } else {
-      print("TOILET");
-      _stopVideoRecording().then((XFile? file) async {
+      // TODO: uncomment this
+      // Wakelock.enable();
+      _controller!.startRecording().then((_) {
         if (mounted) {
           setState(() {});
-        }
-        if (file != null) {
-          String newPath = await getVideoPath();
-          print("MOVING FILE FROM: ${file.path}");
-          print("MOVING FILE AT");
-          final MoveStartTime = DateTime.now().millisecondsSinceEpoch;
-          await moveFile(file.path, newPath);
-          final MoveEndTime = DateTime.now().millisecondsSinceEpoch;
-          print("FILE MOVED");
-          print("TOTAL MOVING TIME: ${MoveEndTime - MoveStartTime}");
-          print('Video recorded to ${newPath}');
-          videoFile = file;
-          // _startVideoPlayer();
-        } else {
-          print("WHY IT AINT HAVING FILE???!!!!");
         }
       });
     }
   }
 
-  Future<void> _startVideoRecording() async {
-    Wakelock.enable();
-    if (_controller!.value.isRecordingVideo) {
-      print("SUCKS TO BE YOU");
-      // A recording is already started, do nothing.
-      return;
-    }
-
+  Future<void> _initializeImageLocationRecordController() async {
     try {
-      await _controller!.startVideoRecording();
-      _recordStartTime = DateTime.now().millisecondsSinceEpoch.toString();
-    } on CameraException catch (e) {
-      print("SUCKS TO BE YOU TOO");
-      return;
+      final instance = await ImageLocationRecordController.createInstance();
+      final cameras = await instance.getAvailableCameras();
+      setState(() {
+        _controller = instance;
+        _cameras = cameras;
+      });
+    } catch (e) {
+      print('Initialization error: $e');
     }
   }
+}
 
-  Future<XFile?> _stopVideoRecording() async {
-    Wakelock.disable();
-    final CameraController? cameraController = _controller;
-
-    if (cameraController == null || !cameraController.value.isRecordingVideo) {
-      return null;
-    }
-
-    try {
-      return cameraController.stopVideoRecording();
-    } on CameraException catch (e) {
-      print(e);
-      return null;
-    }
+class _MediaSizeClipper extends CustomClipper<Rect> {
+  final Size mediaSize;
+  const _MediaSizeClipper(this.mediaSize);
+  @override
+  Rect getClip(Size size) {
+    return Rect.fromLTWH(0, 0, mediaSize.width, mediaSize.height);
   }
-
-  Future<void> moveFile(String fromPath, String toPath) async {
-    final file = File(fromPath);
-    await file.rename(toPath);
-  }
-
-  Future<String> getVideoPath() async {
-    String filePath = path.join(VideoMetadataProvider().recordDirectory.path, '$_recordStartTime.mp4');
-    return filePath;
-  }
-
-  Future<void> _initializeCameras() async {
-    try {
-      _cameras = await availableCameras();
-      _controller = CameraController(_cameras![1], ResolutionPreset.low,
-        fps: 1,
-        enableAudio: false,
-      );
-      await _controller!.initialize();
-      if (!mounted) {
-        return;
-      }
-      setState(() {});
-    } on CameraException catch (e) {
-      // Handle the error here
-      print('Error fetching cameras: $e');
-    }
+  @override
+  bool shouldReclip(CustomClipper<Rect> oldClipper) {
+    return true;
   }
 }

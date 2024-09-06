@@ -122,7 +122,7 @@ void callbackDispatcher() {
           inputData!);
       final UploadContext uploadContext = UploadContext.toObject(inputData);
 
-      final NotificationManager nm = await NotificationManager.buildInstance(uploadContext);
+      final NotificationManager nm = await NotificationManager.createInstance(uploadContext);
 
       final storeDirectory = uploadInput.tusStoreDirectory;
 

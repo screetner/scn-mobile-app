@@ -60,8 +60,7 @@ class _HomePageState extends State<HomePage> {
           videoInfo.videoTitle ?? "Untitled",
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(
-          _formatDuration(videoInfo.videoLength),
+        subtitle: Text('${videoInfo.frameCount.toString()} frames',
           style: const TextStyle(color: Colors.grey),
         ),
         onTap: () {
@@ -93,12 +92,5 @@ class _HomePageState extends State<HomePage> {
       )
           : null,
     );
-  }
-
-  String _formatDuration(Duration? duration) {
-    if (duration == null) return "N/A";
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds.remainder(60);
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }
