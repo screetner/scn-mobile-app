@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
 import 'package:tus_client_background_demo/providers/VideoMetadataProvider.dart';
 
 class HomePage extends StatefulWidget {
@@ -57,14 +58,14 @@ class _HomePageState extends State<HomePage> {
         contentPadding: const EdgeInsets.all(16),
         leading: _buildThumbnail(videoInfo.thumbnail),
         title: Text(
-          videoInfo.videoTitle ?? "Untitled",
+          videoInfo.sessionTitle ?? "Untitled",
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(
-          _formatDuration(videoInfo.videoLength),
+        subtitle: Text('${videoInfo.frameCount.toString()} frames',
           style: const TextStyle(color: Colors.grey),
         ),
         onTap: () {
+          DirectoryUploadManager().uploadDirectory(uploadDirectory: videoInfo.sessionDirectory);
           // Handle tap event
         },
       ),
@@ -93,12 +94,5 @@ class _HomePageState extends State<HomePage> {
       )
           : null,
     );
-  }
-
-  String _formatDuration(Duration? duration) {
-    if (duration == null) return "N/A";
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds.remainder(60);
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }

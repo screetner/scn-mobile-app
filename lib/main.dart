@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tus_client_background_demo/providers/ImageLocationRecordController.dart';
 import 'package:tus_client_background_demo/types/ImmutableVideoRecordManagerContext.dart';
 import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
 
@@ -28,6 +29,7 @@ Future<void> main() async {
   await requestStoragePermission();
   await DirectoryUploadManager().initialize(fumc);
   await VideoMetadataProvider().initialize(vrmc);
+  await ImageLocationRecordController.initialize(vrmc);
   runApp(ScreetnerMainApp());
 }
 
@@ -52,7 +54,10 @@ Future<UploadContext> getEnvUploadContext() async {
 
 
 Future<RecordContext> getEnvRecordContext() async {
-  return new RecordContext(recordDirectory: new Directory(path.join((await getApplicationDocumentsDirectory()).path, 'records')));
+  return new RecordContext(
+      recordDirectory: new Directory(path.join((await getApplicationDocumentsDirectory()).path, 'records')),
+      recordIntervalMilliseconds: 1000,
+  );
 }
 
 Future<void> requestNotificationPermission() async {

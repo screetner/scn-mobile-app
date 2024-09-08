@@ -73,7 +73,7 @@ class NotificationManager {
     return notificationsInitialized;
   }
 
-  static Future<NotificationManager> buildInstance(UploadContext context) async {
+  static Future<NotificationManager> createInstance(UploadContext context) async {
     final nm = NotificationManager._withContext(context);
     await nm.initialize(context);
     return nm;

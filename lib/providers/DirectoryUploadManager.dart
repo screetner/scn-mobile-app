@@ -122,7 +122,7 @@ void callbackDispatcher() {
           inputData!);
       final UploadContext uploadContext = UploadContext.toObject(inputData);
 
-      final NotificationManager nm = await NotificationManager.buildInstance(uploadContext);
+      final NotificationManager nm = await NotificationManager.createInstance(uploadContext);
 
       final storeDirectory = uploadInput.tusStoreDirectory;
 
@@ -160,8 +160,7 @@ void callbackDispatcher() {
 
         tusServerUri: uploadInput.tusdServerUrl,
         genericMetadata: {
-          'testMetaData': 'testMetaData',
-          'testMetaData2': 'testMetaData2',
+          'sessionName': uploadDirectoryPath.split('/').last,
         },
         genericHeaders: {
           'testHeaders': 'testHeaders',

@@ -3,14 +3,17 @@ import 'dart:io';
 
 class ImmutableVideoRecordManagerContext {
   final Directory recordDirectory;
+  final int recordIntervalMilliseconds;
 
   ImmutableVideoRecordManagerContext({
     required this.recordDirectory,
+    required this.recordIntervalMilliseconds,
   }) { }
 
   Map<String, dynamic> toJson() {
     Map<String,dynamic> map = {
       'recordDirectory': recordDirectory.path,
+      'recordInterval': recordIntervalMilliseconds
     };
 
     // Remove keys with null values
@@ -21,6 +24,7 @@ class ImmutableVideoRecordManagerContext {
   static ImmutableVideoRecordManagerContext toObject(Map<String, dynamic> input) {
     return new ImmutableVideoRecordManagerContext(
       recordDirectory: Directory(input['recordDirectory']),
+      recordIntervalMilliseconds: input['recordInterval'],
     );
   }
 }
