@@ -97,29 +97,76 @@ class _RecordPageState extends State<RecordPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.videocam),
-              iconSize: 48.0,
-              color: (_controller!.isRecording) ? Colors.red : Colors.blue,
-              onPressed: _onVideoRecordButtonPressed,
-            ),
+            if (_controller!.isStopped) ...[
+              IconButton(
+                icon: const Icon(Icons.fiber_manual_record),
+                iconSize: 48.0,
+                color: Colors.red,
+                onPressed: _onVideoRecordButtonPressed,
+              ),
+            ] else if (_controller!.isRecording) ...[
+              IconButton(
+                icon: const Icon(Icons.pause),
+                iconSize: 48.0,
+                color: Colors.black,
+                onPressed: _onPauseButtonPressed,
+              ),
+              IconButton(
+                icon: const Icon(Icons.stop),
+                iconSize: 48.0,
+                color: Colors.black,
+                onPressed: _onStopButtonPressed,
+              ),
+            ] else if (_controller!.isPausing) ...[
+              IconButton(
+                icon: const Icon(Icons.fiber_manual_record),
+                iconSize: 48.0,
+                color: Colors.red,
+                onPressed: _onResumeButtonPressed,
+              ),
+              IconButton(
+                icon: const Icon(Icons.stop),
+                iconSize: 48.0,
+                color: Colors.black,
+                onPressed: _onStopButtonPressed,
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  void _onVideoRecordButtonPressed() {
-    if(_controller!.isRecording) {
-      // TODO: disable wakelock
-      _controller!.stopRecording().then((_) {
+  void _onPauseButtonPressed() {
+    if (_controller!.isRecording) {
+      _controller!.pauseRecording().then((_) {
         if (mounted) {
           setState(() {});
         }
       });
-    } else {
-      // TODO: uncomment this
-      // Wakelock.enable();
+    }
+  }
+
+  void _onResumeButtonPressed() {
+    if (_controller!.isPausing) {
+      _controller!.resumeRecording().then((_) {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
+  }
+
+  void _onStopButtonPressed() {
+    _controller!.stopRecording().then((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  void _onVideoRecordButtonPressed() {
+    if (_controller!.isStopped) {
       _controller!.startRecording().then((_) {
         if (mounted) {
           setState(() {});

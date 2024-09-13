@@ -24,9 +24,10 @@ Future<void> main() async {
 
   UploadContext fumc = await getEnvUploadContext();
   RecordContext vrmc = await getEnvRecordContext();
-  List<CameraDescription> _cameras = await availableCameras();
 
   await requestStoragePermission();
+  await requestCameraPermission();
+  await requestLocationPermission();
   await DirectoryUploadManager().initialize(fumc);
   await VideoMetadataProvider().initialize(vrmc);
   await ImageLocationRecordController.initialize(vrmc);
@@ -49,6 +50,7 @@ Future<UploadContext> getEnvUploadContext() async {
     notificationVibrationPattern: dotenv.env['NOTIFICATION_VIBRATION_PATTERN'] != null
       ? Int64List.fromList(dotenv.env['NOTIFICATION_VIBRATION_PATTERN']!.split(',').map(int.parse).toList())
           : null,
+    tusdToken: '',
   );
 }
 
@@ -72,5 +74,23 @@ Future<void> requestStoragePermission() async {
     print('Storage permission granted');
   } else {
     print('Storage permission not granted');
+  }
+}
+
+Future<void> requestCameraPermission() async {
+  final status = await Permission.camera.request();
+  if (status.isGranted) {
+    print('Camera permission granted');
+  } else {
+    print('Camera permission not granted');
+  }
+}
+
+Future<void> requestLocationPermission() async {
+  final status = await Permission.location.request();
+  if (status.isGranted) {
+    print('Location permission granted');
+  } else {
+    print('Location permission not granted');
   }
 }

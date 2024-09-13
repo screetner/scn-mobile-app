@@ -28,13 +28,6 @@ class LocationRecorder {
         throw Exception('Location permissions are permanently denied. Go to settings to enable locations');
       }
 
-      final initialPosition = await Geolocator.getCurrentPosition(
-          locationSettings: LocationSettings(
-            accuracy: LocationAccuracy.high,
-            distanceFilter: 1,
-          )
-      );
-
       return LocationRecorder._privateConstructor(onLocationUpdate);
     } catch (e, stackTrace) {
       // TODO: implement error handling

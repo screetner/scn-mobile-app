@@ -62,8 +62,12 @@ class ImageLocationRecordController {
 
       final locationRecordController = ImageLocationRecordController._privateConstructor();
 
-      await locationRecordController._initializeCameras();
-      locationRecordController._locationRecorder = await LocationRecorder.createInstance(locationRecordController._onLocationUpdate);
+      await Future.wait([
+        locationRecordController._initializeCameras(),
+        LocationRecorder.createInstance(locationRecordController._onLocationUpdate)
+      ]).then((results) {
+        locationRecordController._locationRecorder = results[1] as LocationRecorder;
+      });
 
       return locationRecordController;
     }  catch (e, stackTrace) {
