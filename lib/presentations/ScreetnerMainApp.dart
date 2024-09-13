@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:tus_client_background_demo/services/interceptors/ExpiredTokenInterceptor.dart';
 
 import '../pages/HomePage.dart';
 import '../pages/InformationPage.dart';
@@ -11,21 +12,16 @@ class ScreetnerMainApp extends StatelessWidget {
   ScreetnerMainApp({super.key});
   final FlutterSecureStorage secureStorage = FlutterSecureStorage();
 
-  Future<String?> _getAccessToken() async {
-    final accessToken = await secureStorage.read(key: 'accessToken');
-    return accessToken;
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(useMaterial3: true),
-      home: FutureBuilder<String?>(
-        future: _getAccessToken(),
+      home: FutureBuilder<bool>(
+        future: ExpiredTokenInterceptor.isRefreshTokenExpired(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasData && snapshot.data != null) {
+          } else if (snapshot.hasData && !snapshot.data!) {
             return const ScreetnerHome();
           } else {
             return LoginPage();

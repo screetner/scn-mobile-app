@@ -16,7 +16,8 @@ class LoginResponseDTO {
   final String email;
   final String roleName;
   final String orgName;
-  final DateTime accessTokenExpiry;
+  final String accessTokenExpiry;
+  final String refreshTokenExpiry;
 
   LoginResponseDTO({
     required this.accessToken,
@@ -26,6 +27,7 @@ class LoginResponseDTO {
     required this.roleName,
     required this.orgName,
     required this.accessTokenExpiry,
+    required this.refreshTokenExpiry,
   });
 
   factory LoginResponseDTO.fromJson(Map<String, dynamic> json) {
@@ -36,7 +38,8 @@ class LoginResponseDTO {
       email: json['user']['email'],
       roleName: json['user']['roleName'],
       orgName: json['user']['orgName'],
-      accessTokenExpiry: DateTime.parse(json['user']['accessTokenExpiry']),
+      accessTokenExpiry: json['user']['accessTokenExpiry'],
+      refreshTokenExpiry: json['user']['refreshTokenExpiry'],
     );
   }
 }

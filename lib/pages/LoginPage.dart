@@ -31,6 +31,8 @@ class _LoginPageState extends State<LoginPage> {
         final response = await authService.login(loginDto);
         await secureStorage.write(key: 'accessToken', value: response.accessToken);
         await secureStorage.write(key: 'refreshToken', value: response.refreshToken);
+        await secureStorage.write(key: 'accessTokenExpiry', value: response.accessTokenExpiry);
+        await secureStorage.write(key: 'refreshTokenExpiry', value: response.refreshTokenExpiry);
         await secureStorage.write(key: 'username', value: response.username);
         await secureStorage.write(key: 'orgName', value: response.orgName);
         await secureStorage.write(key: 'role', value: response.roleName);
