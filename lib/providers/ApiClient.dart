@@ -4,9 +4,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tus_client_background_demo/services/interceptors/ExpiredTokenInterceptor.dart';
 import 'package:tus_client_background_demo/types/api/RefreshToken.dart';
 
+import '../services/models/SecureStorageCache.dart';
+
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
-  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  final FlutterSecureStorage secureStorage = SecureStorageCache();
 
   final Dio _dio = Dio();
 

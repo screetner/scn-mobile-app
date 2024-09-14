@@ -3,9 +3,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tus_client_background_demo/types/api/RefreshToken.dart';
 
+import '../models/SecureStorageCache.dart';
+
 class ExpiredTokenInterceptor extends Interceptor {
   final Dio _dio = Dio();
-  static final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  static final FlutterSecureStorage secureStorage = SecureStorageCache();
 
   ExpiredTokenInterceptor() {
     _dio.options.baseUrl = dotenv.env['API_URL']!;

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:tus_client_background_demo/presentations/ScreetnerMainApp.dart';
 import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
 import 'package:tus_client_background_demo/providers/VideoMetadataProvider.dart';
 
@@ -9,13 +10,38 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  late Future<List<VideoInfo>> _videoInfoList;
+class _HomePageState extends State<HomePage> with RouteAware {
+  late Future<List<VideoInfo>>?_videoInfoList;
 
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      final route = ModalRoute.of(context)!;
+      if (route is PageRoute) {
+        ScreetnerMainApp.routeObserver.subscribe(this, route);
+      }
+    });
+
+    _loadVideoInfo();
+  }
+
+  @override
+  void dispose() {
+    ScreetnerMainApp.routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  void _loadVideoInfo() {
     _videoInfoList = VideoMetadataProvider().getVideoInfo();
+  }
+
+  @override
+  void didPopNext() {
+    setState(() {
+      _loadVideoInfo();
+    });
   }
 
   @override

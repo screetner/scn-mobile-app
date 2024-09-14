@@ -7,15 +7,19 @@ import '../pages/InformationPage.dart';
 import '../pages/LoginPage.dart';
 import '../pages/NotificationPage.dart';
 import '../pages/RecordPage.dart';
+import '../services/models/SecureStorageCache.dart';
 
 class ScreetnerMainApp extends StatelessWidget {
   ScreetnerMainApp({super.key});
-  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  final FlutterSecureStorage secureStorage = SecureStorageCache();
+
+  static final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(useMaterial3: true),
+      navigatorObservers: [routeObserver],
       home: FutureBuilder<bool>(
         future: ExpiredTokenInterceptor.isRefreshTokenExpired(),
         builder: (context, snapshot) {
