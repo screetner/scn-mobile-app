@@ -87,6 +87,7 @@ class ExpiredTokenInterceptor extends Interceptor {
   Future<Response<Map<String, dynamic>>> _refreshAccessToken() async {
     final accessToken = await secureStorage.read(key: 'accessToken');
     final refreshToken = await secureStorage.read(key: 'refreshToken');
+    final tusdToken = await secureStorage.read(key: 'tusdToken');
 
     return await _dio.post<Map<String, dynamic>>(
       '/auth/login',
@@ -94,6 +95,7 @@ class ExpiredTokenInterceptor extends Interceptor {
         headers: {
           'Authorization': 'Bearer $accessToken',
           'AuthorizationRefresh': 'Bearer $refreshToken',
+          'AuthorizationTusd': 'Bearer $tusdToken',
         },
       ),
     );
@@ -102,15 +104,21 @@ class ExpiredTokenInterceptor extends Interceptor {
   Future<void> _storeTokenFromRefresh(RefreshTokenResponseDTO response) async {
     final accessToken = response.accessToken;
     final refreshToken = response.refreshToken;
+    final tusdToken = response.tusdToken;
 
     await secureStorage.write(key: 'accessToken', value: accessToken);
     await secureStorage.write(key: 'refreshToken', value: refreshToken);
+    await secureStorage.write(key: 'tusdToken', value: tusdToken);
   }
 
   Future<void> _clearUserData() async {
+    await secureStorage.delete(key: 'username');
     await secureStorage.delete(key: 'accessToken');
     await secureStorage.delete(key: 'refreshToken');
-    await secureStorage.delete(key: 'username');
+    await secureStorage.delete(key: 'tusdToken');
+    await secureStorage.delete(key: 'accessTokenExpiry');
+    await secureStorage.delete(key: 'refreshTokenExpiry');
+    await secureStorage.delete(key: 'tusdTokenExpiry');
   }
 
   static Future<bool> isAccessTokenExpired() async {

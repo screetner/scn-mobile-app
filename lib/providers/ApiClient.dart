@@ -91,6 +91,15 @@ class ApiClient {
     }
   }
 
+  Future <String?> getTusdToken() async {
+    try {
+      final refreshToken = await secureStorage.read(key: 'tusdToken');
+      return refreshToken;
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<DateTime?> getAccessTokenExpiry() async {
     try {
       final accessTokenExpiry = await secureStorage.read(key: 'accessTokenExpiry');

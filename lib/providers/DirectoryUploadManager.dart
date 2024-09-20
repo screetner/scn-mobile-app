@@ -7,6 +7,7 @@ import 'package:tus_client_background_demo/providers/NotificationManager.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../types/ImmutableUploadManagerContext.dart';
+import 'ApiClient.dart';
 
 class DirectoryUploadManager {
   bool _isInitialized = false;
@@ -45,7 +46,13 @@ class DirectoryUploadManager {
   }
 
   Future<void> uploadDirectory({required Directory uploadDirectory, int? chunkSize}) async {
-    Map<String, dynamic> inputData = getWorkmanagerContext(uploadDirectory: uploadDirectory, chunkSize: chunkSize).toJson();
+    final tusdToken = (await ApiClient().getTusdToken())!;
+
+    Map<String, dynamic> inputData = getWorkmanagerContext(
+        uploadDirectory: uploadDirectory,
+        tusdToken: tusdToken,
+        chunkSize: chunkSize
+    ).toJson();
 
     print("EXECUTE UPLOAD DIRECTORY ON WORK MANAGER: " + getTaskUniqueName(uploadDirectory.path));
     Workmanager().registerOneOffTask(getTaskUniqueName(uploadDirectory.path),'_',
@@ -80,7 +87,7 @@ class DirectoryUploadManager {
     return str.replaceAll(RegExp(r"\W+"), '.');
   }
 
-  DirectoryUploadInput getWorkmanagerContext({required Directory uploadDirectory, int? chunkSize}) {
+  DirectoryUploadInput getWorkmanagerContext({required Directory uploadDirectory, required String tusdToken, int? chunkSize}) {
     return new DirectoryUploadInput(
       uploadDirectory: uploadDirectory,
       chunkSize: chunkSize,
@@ -93,7 +100,8 @@ class DirectoryUploadManager {
       notificationChannelDescription: _context.notificationChannelDescription,
       notificationSoundSource: _context.notificationSoundSource,
       notificationDefaultColor: _context.notificationDefaultColor,
-      notificationVibrationPattern: _context.notificationVibrationPattern
+      notificationVibrationPattern: _context.notificationVibrationPattern,
+      tusdToken: tusdToken,
     );
   }
 
@@ -123,6 +131,8 @@ void callbackDispatcher() {
       final UploadContext uploadContext = UploadContext.toObject(inputData);
 
       final NotificationManager nm = await NotificationManager.createInstance(uploadContext);
+
+      final tusdToken = uploadContext.tusdToken;
 
       final storeDirectory = uploadInput.tusStoreDirectory;
 
@@ -158,13 +168,13 @@ void callbackDispatcher() {
           print("UPLOAD FINISHED");
         },
 
+        // TODO: handle if the access token is expired
         tusServerUri: uploadInput.tusdServerUrl,
         genericMetadata: {
           'sessionName': uploadDirectoryPath.split('/').last,
         },
         genericHeaders: {
-          'testHeaders': 'testHeaders',
-          'testHeaders2': 'testHeaders2',
+          'AuthorizationTusd': 'Bearer ${tusdToken}',
         },
         measureUploadSpeed: false,
       );

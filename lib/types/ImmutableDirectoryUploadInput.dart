@@ -18,6 +18,7 @@ class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
     required super.tusStoreDirectory,
     required super.notificationChannelKey,
     required super.notificationChannelGroupKey,
+    required super.tusdToken,
     int? this.chunkSize,
     int? this.retries,
     RetryScale? this.retryScale,
@@ -58,6 +59,7 @@ class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
       notificationSoundSource: uploadContext.notificationSoundSource,
       notificationDefaultColor: uploadContext.notificationDefaultColor,
       notificationVibrationPattern: uploadContext.notificationVibrationPattern,
+      tusdToken: uploadContext.tusdToken,
     );
   }
 }

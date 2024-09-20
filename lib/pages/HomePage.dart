@@ -11,7 +11,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with RouteAware {
-  late Future<List<VideoInfo>>?_videoInfoList;
+  late Future<List<VideoInfo>> _videoInfoList;
 
   @override
   void initState() {

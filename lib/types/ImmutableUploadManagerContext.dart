@@ -15,12 +15,14 @@ class ImmutableUploadManagerContext {
   final String? notificationSoundSource;
   final Color? notificationDefaultColor;
   final Int64List? notificationVibrationPattern;
+  final String? tusdToken;
 
   ImmutableUploadManagerContext({
     required this.tusdServerUrl,
     required this.tusStoreDirectory,
     required this.notificationChannelKey,
     required this.notificationChannelGroupKey,
+    required this.tusdToken,
     String? this.notificationChannelName,
     String? this.notificationChannelGroupName,
     String? this.notificationChannelDescription,
@@ -44,6 +46,7 @@ class ImmutableUploadManagerContext {
       notificationSoundSource: this.notificationSoundSource,
       notificationDefaultColor: this.notificationDefaultColor,
       notificationVibrationPattern: this.notificationVibrationPattern,
+      tusdToken: this.tusdToken,
     );
   }
 
@@ -59,6 +62,7 @@ class ImmutableUploadManagerContext {
       'notification_sound_source': notificationSoundSource,
       'notification_default_color': notificationDefaultColor?.value,
       'notification_vibration_pattern': notificationVibrationPattern?.toList(),
+      'tusd_token': tusdToken,
     };
 
     // Remove keys with null values
@@ -78,6 +82,7 @@ class ImmutableUploadManagerContext {
       notificationSoundSource: input['notification_sound_source'],
       notificationDefaultColor: input['notification_default_color'] != null ? Color(input['notification_default_color']) : null,
       notificationVibrationPattern: input['notification_vibration_pattern'] != null ? Int64List.fromList(List<int>.from(input['notification_vibration_pattern'])) : null,
+      tusdToken: input['tusd_token'],
     );
   }
 }

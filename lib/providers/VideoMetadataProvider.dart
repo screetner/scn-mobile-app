@@ -45,23 +45,36 @@ class VideoMetadataProvider {
       final batch = recordSessions.sublist(i, min(i + batchSize, recordsCount));
 
       List<Future<VideoInfo>> batchFutures = batch.map((Directory directory) async {
-        final infoFile = File('${directory.path}/information.json');
-        final infoJsonString = await infoFile.readAsString();
-        final info = jsonDecode(infoJsonString);
+        try {
+          final infoFile = File('${directory.path}/information.json');
+          final infoJsonString = await infoFile.readAsString();
+          final info = jsonDecode(infoJsonString);
 
-        final videoTlocTuples = info['videoTlocTuples'] ?? [];
-        final firstVideoName = videoTlocTuples.first['videoName'] ?? "";
-        final firstVideoPath = '${directory.path}/$firstVideoName';
-        final thumbnail = await _getThumbnail(firstVideoPath);
+          final videoTlocTuples = info['videoTlocTuples'] ?? [];
+          final firstVideoName = videoTlocTuples.first['videoName'] ?? "";
+          final firstVideoPath = '${directory.path}/$firstVideoName';
+          final thumbnail = await _getThumbnail(firstVideoPath);
 
-        final sessionName = directory.path.split('/').last.split('.').first;
-        final sessionTitle = parseAndFormatUnixTimestamp(sessionName) ?? sessionName;
+          final sessionName = directory.path
+              .split('/')
+              .last
+              .split('.')
+              .first;
+          final sessionTitle = parseAndFormatUnixTimestamp(sessionName) ??
+              sessionName;
 
-        return VideoInfo(
-          thumbnail: thumbnail,
-          sessionTitle: sessionTitle,
-          sessionDirectory: directory
-        );
+          return VideoInfo(
+              thumbnail: thumbnail,
+              sessionTitle: sessionTitle,
+              sessionDirectory: directory
+          );
+        } catch (e, stackTrace) {
+          return VideoInfo(
+              thumbnail: null,
+              sessionTitle: e.toString(),
+              sessionDirectory: directory
+          );
+        }
       }).toList();
 
       List<VideoInfo> batchResults = await Future.wait(batchFutures);
