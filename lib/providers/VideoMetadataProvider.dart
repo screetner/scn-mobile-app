@@ -35,7 +35,7 @@ class VideoMetadataProvider {
   }
 
   Future<List<VideoInfo>> getVideoInfo() async {
-    final List<Directory> recordSessions = await getVideoSessions();
+    final List<Directory> recordSessions = getVideoSessions();
 
     final recordsCount = recordSessions.length;
     final batchSize = 10;
@@ -84,7 +84,7 @@ class VideoMetadataProvider {
     return recordInfoList;
   }
 
-  Future<List<Directory>> getVideoSessions() async {
+  List<Directory> getVideoSessions() {
     return _recordDirectory
         .listSync()
         .where((item) => item is Directory)

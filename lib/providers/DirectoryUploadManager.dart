@@ -45,6 +45,10 @@ class DirectoryUploadManager {
     return notificationsInitialized;
   }
 
+  void deleteDirectory({required Directory deleteDirectory}) {
+    deleteDirectory.deleteSync(recursive: true);
+  }
+
   Future<void> uploadDirectory({required Directory uploadDirectory, int? chunkSize}) async {
     final tusdToken = (await ApiClient().getTusdToken())!;
 
