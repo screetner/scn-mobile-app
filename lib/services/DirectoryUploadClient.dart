@@ -265,7 +265,11 @@ class DirectoryUploadClient{
   }
 
   String? generateFingerprint() {
-    return _uploadDirectory.path.replaceAll(RegExp(r"\W+"), '_');
+    return getAsFingerprint(_uploadDirectory.path);
+  }
+
+  static String getAsFingerprint(String str) {
+    return str.replaceAll(RegExp(r"\W+"), '_');
   }
 
   TusClient? get currentTusClient => _currentTusClient;

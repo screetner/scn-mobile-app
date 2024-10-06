@@ -4,6 +4,10 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
+import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
+import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
+import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import '../types/ImmutableVideoRecordManagerContext.dart';
 
@@ -66,13 +70,15 @@ class VideoMetadataProvider {
           return VideoInfo(
               thumbnail: thumbnail,
               sessionTitle: sessionTitle,
-              sessionDirectory: directory
+              sessionDirectory: directory,
+            fingerprint: DirectoryUploadClient.getAsFingerprint(directory.path)
           );
         } catch (e, stackTrace) {
           return VideoInfo(
               thumbnail: null,
               sessionTitle: e.toString(),
-              sessionDirectory: directory
+              sessionDirectory: directory,
+            fingerprint: DirectoryUploadClient.getAsFingerprint(directory.path)
           );
         }
       }).toList();
@@ -130,12 +136,14 @@ class VideoMetadataProvider {
 class ImmutableVideoInformation {
   final Uint8List? thumbnail;
   final int? frameCount;
+  final String fingerprint;
   final String sessionTitle;
   final Directory sessionDirectory;
 
   ImmutableVideoInformation({
     Uint8List? this.thumbnail,
     int? this.frameCount,
+    required this.fingerprint,
     required this.sessionTitle,
     required this.sessionDirectory,
   }) {}

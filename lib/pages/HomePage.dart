@@ -1,8 +1,9 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:tus_client_background_demo/presentations/ScreetnerMainApp.dart';
 import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
+import 'package:tus_client_background_demo/providers/ErrorAsserter.dart';
+import 'package:tus_client_background_demo/providers/ProgressIsolateManager.dart';
 import 'package:tus_client_background_demo/providers/VideoMetadataProvider.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,6 +16,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
   late Future<List<VideoInfo>> _videoInfoListFuture;
   late List<VideoInfo> _videoInfoList;
   final Set<VideoInfo> _expandedCards = {};
+  final Map<String, double> _progressMap = {};
+  late ProgressIsolateManager _progressIsolateManager;
 
   @override
   void initState() {
@@ -28,16 +31,30 @@ class _HomePageState extends State<HomePage> with RouteAware {
     });
 
     _videoInfoListFuture = _loadVideoInfo();
+    _progressIsolateManager = ProgressIsolateManager();
+    _startProgressIsolate();
   }
 
   @override
   void dispose() {
     ScreetnerMainApp.routeObserver.unsubscribe(this);
+    _progressIsolateManager.stop();
     super.dispose();
   }
 
   Future<List<VideoInfo>> _loadVideoInfo() async {
     return await VideoMetadataProvider().getVideoInfo();
+  }
+
+  Future<void> _startProgressIsolate() async {
+    final context = DirectoryUploadManager().getContext();
+    final progressFile = context.progressStoreFile;
+
+    await _progressIsolateManager.start(progressFile, (progressMap) {
+      setState(() {
+        _progressMap.addAll(progressMap);
+      });
+    });
   }
 
   @override
@@ -61,7 +78,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('No files found'));
+              return Center(child: Text('No videos found'));
             }
 
             _videoInfoList = snapshot.data!;
@@ -70,7 +87,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
               initialItemCount: _videoInfoList.length,
               padding: const EdgeInsets.all(16.0),
               itemBuilder: (context, index, animation) {
-                return _buildVideoCard(context, _videoInfoList[index], animation);
+                final videoInfo = _videoInfoList[index];
+                return _buildVideoCard(context, videoInfo, animation);
               },
             );
           },
@@ -90,7 +108,9 @@ class _HomePageState extends State<HomePage> with RouteAware {
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
           onPressed: () {
-            DirectoryUploadManager().uploadDirectory(uploadDirectory: videoInfo.sessionDirectory);
+            Asserter().handle(context, () {
+              DirectoryUploadManager().uploadDirectory(uploadDirectory: videoInfo.sessionDirectory);
+            });
           },
           child: Icon(Icons.cloud_upload),
         ),
@@ -102,7 +122,9 @@ class _HomePageState extends State<HomePage> with RouteAware {
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
           onPressed: () {
-            _showDeleteConfirmationDialog(context, videoInfo);
+            Asserter().handle(context, () {
+              _showDeleteConfirmationDialog(context, videoInfo);
+            });
           },
           child: Icon(Icons.delete_outline, color: Colors.red),
         ),
@@ -117,38 +139,43 @@ class _HomePageState extends State<HomePage> with RouteAware {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        child: ExpansionTile(
-          key: PageStorageKey<VideoInfo>(videoInfo),
-          leading: _buildThumbnail(videoInfo.thumbnail),
-          title: Text(
-            videoInfo.sessionTitle,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(
-            '${videoInfo.frameCount.toString()} frames',
-            style: const TextStyle(color: Colors.grey),
-          ),
-          children: <Widget>[
-            Flex(
-              direction: Axis.horizontal,
-              children: [
-                uploadButton,
-                deleteButton,
+        child: Column(
+          children: [
+            LinearProgressIndicator(
+              value: (_progressMap[videoInfo.sessionDirectory.path] ?? 0.0) / 100,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+            ExpansionTile(
+              key: PageStorageKey<VideoInfo>(videoInfo),
+              leading: _buildThumbnail(videoInfo.thumbnail),
+              title: Text(
+                videoInfo.sessionTitle,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              children: <Widget>[
+                Flex(
+                  direction: Axis.horizontal,
+                  children: [
+                    uploadButton,
+                    deleteButton,
+                  ],
+                ),
               ],
+              expansionAnimationStyle: expansionStyle,
+              dense: false,
+              initiallyExpanded: _expandedCards.contains(videoInfo),
+              onExpansionChanged: (bool expanded) {
+                setState(() {
+                  if (expanded) {
+                    _expandedCards.add(videoInfo);
+                  } else {
+                    _expandedCards.remove(videoInfo);
+                  }
+                });
+              },
             ),
           ],
-          expansionAnimationStyle: expansionStyle,
-          dense: true,
-          initiallyExpanded: _expandedCards.contains(videoInfo),
-          onExpansionChanged: (bool expanded) {
-            setState(() {
-              if (expanded) {
-                _expandedCards.add(videoInfo);
-              } else {
-                _expandedCards.remove(videoInfo);
-              }
-            });
-          },
         ),
       ),
     );
@@ -202,6 +229,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
   void _showDeleteNotification(BuildContext context) {
     final snackBar = SnackBar(
       content: Text('The card has been successfully deleted.'),
+      backgroundColor: Colors.redAccent,
       duration: Duration(seconds: 3),
     );
 

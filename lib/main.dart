@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
@@ -28,6 +27,7 @@ Future<void> main() async {
   await requestStoragePermission();
   await requestCameraPermission();
   await requestLocationPermission();
+  await requestNotificationPermission();
   await DirectoryUploadManager().initialize(fumc);
   await VideoMetadataProvider().initialize(vrmc);
   await ImageLocationRecordController.initialize(vrmc);
@@ -38,6 +38,7 @@ Future<UploadContext> getEnvUploadContext() async {
   return new UploadContext(
     tusdServerUrl: Uri.parse(dotenv.env['TUSD_SERVER_URL']!),
     tusStoreDirectory: Directory(dotenv.env['TUS_STORE_DIRECTORY'] ?? path.join((await getApplicationSupportDirectory()).path, 'tusStore')),
+    progressStoreFile: File(dotenv.env['PROGRESS_STORE_FILE'] ?? path.join((await getApplicationSupportDirectory()).path, 'progressStore')),
     notificationChannelKey: dotenv.env['NOTIFICATION_CHANNEL_KEY'] ?? 'scn-mobile-app-progress-notification',
     notificationChannelGroupKey: dotenv.env['NOTIFICATION_CHANNEL_GROUP_KEY'] ?? 'scn-mobile-app',
     notificationChannelName: dotenv.env['NOTIFICATION_CHANNEL_NAME'],

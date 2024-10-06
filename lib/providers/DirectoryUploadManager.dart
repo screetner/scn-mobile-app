@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:tus_client_background_demo/services/models/ProgressFileStore.dart';
 import 'package:tus_client_background_demo/types/ImmutableDirectoryUploadInput.dart';
 import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
 import 'package:tus_client_background_demo/providers/NotificationManager.dart';
@@ -96,6 +97,7 @@ class DirectoryUploadManager {
       uploadDirectory: uploadDirectory,
       chunkSize: chunkSize,
       tusdServerUrl: _context.tusdServerUrl,
+      progressStoreFile: _context.progressStoreFile,
       tusStoreDirectory: _context.tusStoreDirectory,
       notificationChannelKey: _context.notificationChannelKey,
       notificationChannelGroupKey: _context.notificationChannelGroupKey,
@@ -140,6 +142,8 @@ void callbackDispatcher() {
 
       final storeDirectory = uploadInput.tusStoreDirectory;
 
+      final progressFile = uploadContext.progressStoreFile;
+
       final uploadDirectory = uploadInput.uploadDirectory;
       final uploadDirectoryPath = uploadDirectory.path;
       final nmFingerprint = uploadDirectoryPath;
@@ -158,17 +162,23 @@ void callbackDispatcher() {
 
       final uploadProgress = client.getUploadProgressPercentage;
 
+      final progressStore = new ProgressFileStore(progressFile);
       await client.upload(
-        onFileUploadStart: (client, estimate) =>
-            nm.updateProgressBarFor(nmFingerprint, uploadProgress()),
+        onFileUploadStart: (client, estimate) {
+          nm.updateProgressBarFor(nmFingerprint, uploadProgress());
+          progressStore.set(nmFingerprint, 0.0);
+        },
 
         onFileUploadProgress: throttle((progressPercentage, estimate) {
-          nm.updateProgressBarFor(nmFingerprint, uploadProgress());
+          final up = uploadProgress();
+          nm.updateProgressBarFor(nmFingerprint, up);
+          progressStore.set(nmFingerprint, up);
         }, const Duration(seconds: 1)),
         // Ensure that the progressBar won't be called more than once per second.
 
         onFileUploadComplete: () {
           nm.updateProgressBarFor(nmFingerprint, uploadProgress());
+          progressStore.set(nmFingerprint, 1.0);
           print("UPLOAD FINISHED");
         },
 

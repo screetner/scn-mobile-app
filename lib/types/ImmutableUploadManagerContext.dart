@@ -5,6 +5,7 @@ import 'dart:ui';
 class ImmutableUploadManagerContext {
   final Uri tusdServerUrl;
   final Directory tusStoreDirectory;
+  final File progressStoreFile;
   final String notificationChannelKey;
   late final String notificationChannelKeySilent;
   late final String notificationChannelKeyAudible;
@@ -20,6 +21,7 @@ class ImmutableUploadManagerContext {
   ImmutableUploadManagerContext({
     required this.tusdServerUrl,
     required this.tusStoreDirectory,
+    required this.progressStoreFile,
     required this.notificationChannelKey,
     required this.notificationChannelGroupKey,
     required this.tusdToken,
@@ -38,6 +40,7 @@ class ImmutableUploadManagerContext {
     return new ImmutableUploadManagerContext (
       tusdServerUrl: this.tusdServerUrl,
       tusStoreDirectory: this.tusStoreDirectory,
+      progressStoreFile:  this.progressStoreFile,
       notificationChannelKey: this.notificationChannelKey,
       notificationChannelGroupKey: this.notificationChannelGroupKey,
       notificationChannelName: this.notificationChannelName,
@@ -54,6 +57,7 @@ class ImmutableUploadManagerContext {
     Map<String,dynamic> map = {
       'tusd_server_url': tusdServerUrl.toString(),
       'tus_store_directory_path': tusStoreDirectory.path,
+      'progress_store_file_path': progressStoreFile.path,
       'notification_channel_key': notificationChannelKey,
       'notification_channel_group_key': notificationChannelGroupKey,
       'notification_channel_name': notificationChannelName,
@@ -74,6 +78,7 @@ class ImmutableUploadManagerContext {
     return new ImmutableUploadManagerContext(
       tusdServerUrl: Uri.parse(input['tusd_server_url']!),
       tusStoreDirectory: Directory(input['tus_store_directory_path']!),
+      progressStoreFile: File(input['progress_store_file_path']!),
       notificationChannelKey: input['notification_channel_key']!,
       notificationChannelGroupKey: input['notification_channel_group_key']!,
       notificationChannelName: input['notification_channel_name'],
