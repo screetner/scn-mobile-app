@@ -55,9 +55,14 @@ class ExpiredTokenInterceptor extends Interceptor {
   @override
   Future onError(DioException err, ErrorInterceptorHandler handler) async {
     final statusCode = err.response?.statusCode;
+    final path = err.response?.requestOptions.path;
 
     if(statusCode != 401 && statusCode != 403) {
-      return;
+      return handler.next(err);
+    }
+
+    if(path == "/auth/login") {
+      return handler.next(err);
     }
 
     final refreshResponse = await _refreshAccessToken();
