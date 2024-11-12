@@ -283,9 +283,9 @@ class ImageLocationRecordController {
       final timeUnix = position.timestamp.millisecondsSinceEpoch;
 
       final byteData = ByteData(20);
-      byteData.setFloat64(0, latitude, Endian.little);
-      byteData.setFloat64(8, longitude, Endian.little);
-      byteData.setInt32(16, timeUnix, Endian.little);
+      byteData.setInt32(0, timeUnix, Endian.little);
+      byteData.setFloat64(4, latitude, Endian.little);
+      byteData.setFloat64(12, longitude, Endian.little);
 
       _tlocWriteStream!.writeFromSync(byteData.buffer.asUint8List());
 
