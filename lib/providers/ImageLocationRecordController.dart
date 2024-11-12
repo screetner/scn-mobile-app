@@ -282,10 +282,10 @@ class ImageLocationRecordController {
       final longitude = position.longitude;
       final timeUnix = position.timestamp.millisecondsSinceEpoch;
 
-      final byteData = ByteData(20);
-      byteData.setInt32(0, timeUnix, Endian.little);
-      byteData.setFloat64(4, latitude, Endian.little);
-      byteData.setFloat64(12, longitude, Endian.little);
+      final byteData = ByteData(24);
+      byteData.setInt64(0, timeUnix, Endian.little);
+      byteData.setFloat64(8, latitude, Endian.little);
+      byteData.setFloat64(16, longitude, Endian.little);
 
       _tlocWriteStream!.writeFromSync(byteData.buffer.asUint8List());
 
