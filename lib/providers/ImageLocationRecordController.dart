@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path/path.dart' as path;
 import 'package:tus_client_background_demo/services/LocationRecorder.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../types/ImmutableVideoRecordManagerContext.dart';
 
@@ -201,6 +202,7 @@ class ImageLocationRecordController {
       final zeroBytes = ByteData(4);
       await _tlocWriteStream!.writeFrom(zeroBytes.buffer.asUint8List());
 
+      WakelockPlus.enable();
       await _locationRecorder.startLocationRecorder();
       await _cameraController.startVideoRecording();
 
@@ -214,6 +216,7 @@ class ImageLocationRecordController {
 
   Future<void> _stopVideoTlocRecord() async {
     try {
+      WakelockPlus.disable();
       await _locationRecorder.stopLocationStream();
       final videoXFile = await _cameraController.stopVideoRecording();
 
@@ -222,6 +225,7 @@ class ImageLocationRecordController {
       await _tlocWriteStream!.setPosition(0);
       await _tlocWriteStream!.writeFrom(byteData.buffer.asUint8List(), 0);
       await _tlocWriteStream!.close();
+
 
       // Move the video file to the session directory
       print("MOVING FILE FROM: ${videoXFile.path}");
@@ -261,7 +265,7 @@ class ImageLocationRecordController {
 
       final infoFile = File('${_sessionDirectory.path}/information.json');
       final jsonString = jsonEncode(infoMap);
-      await infoFile.writeAsString(jsonString);
+      await infoFile.writeAsString(jsonString, mode: FileMode.write, flush: true);
 
     } catch (e, stackTrace) {
       // TODO: implement error handling
