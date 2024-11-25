@@ -1,16 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:tus_client_background_demo/types/api/RefreshToken.dart';
 
+import '../../types/api/Auth.dart';
 import '../models/SecureStorageCache.dart';
 
 class ExpiredTokenInterceptor extends Interceptor {
-  final Dio _dio = Dio();
+  final Dio _pureDio = Dio();
   static final FlutterSecureStorage secureStorage = SecureStorageCache();
 
   ExpiredTokenInterceptor() {
-    _dio.options.baseUrl = dotenv.env['API_URL']!;
+    _pureDio.options.baseUrl = dotenv.env['API_URL']!;
   }
 
   @override
@@ -33,7 +33,7 @@ class ExpiredTokenInterceptor extends Interceptor {
       final refreshStatus = refreshResponse.statusCode;
 
       if(refreshStatus != 401 && refreshStatus != 403) {
-        final refreshResponseData = RefreshTokenResponseDTO.fromJson(refreshResponse.data!);
+        final refreshResponseData = RefreshResponseDTO.fromJson(refreshResponse.data!);
         await _storeTokenFromRefresh(refreshResponseData);
 
         options.headers['Authorization'] = 'Bearer ${refreshResponseData.accessToken}';
@@ -52,50 +52,51 @@ class ExpiredTokenInterceptor extends Interceptor {
     return handler.next(options);
   }
 
-  @override
-  Future onError(DioException err, ErrorInterceptorHandler handler) async {
-    final statusCode = err.response?.statusCode;
-    final path = err.response?.requestOptions.path;
-
-    if(statusCode != 401 && statusCode != 403) {
-      return handler.next(err);
-    }
-
-    if(path == "/auth/login") {
-      return handler.next(err);
-    }
-
-    final refreshResponse = await _refreshAccessToken();
-    final refreshStatus = refreshResponse.statusCode;
-
-    if(refreshStatus != 401 && refreshStatus != 403) {
-      final refreshResponseData = RefreshTokenResponseDTO.fromJson(refreshResponse.data!);
-      _storeTokenFromRefresh(refreshResponseData);
-
-      return handler.resolve(await _dio.fetch(err.requestOptions));
-    }
-
-    // TODO: refresh ScreetnerMainApp to redirect to LoginPage
-    // Personally, I think the app must auto login every time the user opens the app
-    // to get new access and refresh tokens So that it can be ensured that the app
-    // stores a valid username and password and don't occasionally redirect the user
-    // to the login page when the user is already inside the ScreetnerHome.
-    //
-    // However, we should still be able to redirect the user to the login page
-    // from here in case the user somehow is unable to auto login.
-
-    await _clearUserData();
-
-    return handler.next(err);
-  }
+  // @override
+  // Future onError(DioException err, ErrorInterceptorHandler handler) async {
+  //   final statusCode = err.response?.statusCode;
+  //   final path = err.response?.requestOptions.path;
+  //
+  //   if(statusCode != 401 && statusCode != 403) {
+  //     return handler.next(err);
+  //   }
+  //
+  //   final bypassingAPI = ["/auth/login", "/auth/refresh"];
+  //   if(bypassingAPI.contains(path)) {
+  //     return handler.next(err);
+  //   }
+  //
+  //   final refreshResponse = await _refreshAccessToken();
+  //   final refreshStatus = refreshResponse.statusCode;
+  //
+  //   if(refreshStatus != 401 && refreshStatus != 403) {
+  //     final refreshResponseData = RefreshResponseDTO.fromJson(refreshResponse.data!);
+  //     _storeTokenFromRefresh(refreshResponseData);
+  //
+  //     return handler.resolve(await _pureDio.fetch(err.requestOptions));
+  //   }
+  //
+  //   // TODO: refresh ScreetnerMainApp to redirect to LoginPage
+  //   // Personally, I think the app must auto login every time the user opens the app
+  //   // to get new access and refresh tokens So that it can be ensured that the app
+  //   // stores a valid username and password and don't occasionally redirect the user
+  //   // to the login page when the user is already inside the ScreetnerHome.
+  //   //
+  //   // However, we should still be able to redirect the user to the login page
+  //   // from here in case the user somehow is unable to auto login.
+  //
+  //   await _clearUserData();
+  //
+  //   return handler.next(err);
+  // }
 
   Future<Response<Map<String, dynamic>>> _refreshAccessToken() async {
     final accessToken = await secureStorage.read(key: 'accessToken');
     final refreshToken = await secureStorage.read(key: 'refreshToken');
     final tusdToken = await secureStorage.read(key: 'tusdToken');
 
-    return await _dio.post<Map<String, dynamic>>(
-      '/auth/login',
+    return await _pureDio.get<Map<String, dynamic>>(
+      '/auth/refresh',
       options: Options(
         headers: {
           'Authorization': 'Bearer $accessToken',
@@ -106,14 +107,20 @@ class ExpiredTokenInterceptor extends Interceptor {
     );
   }
 
-  Future<void> _storeTokenFromRefresh(RefreshTokenResponseDTO response) async {
+  Future<void> _storeTokenFromRefresh(RefreshResponseDTO response) async {
     final accessToken = response.accessToken;
+    final accessTokenExpiry = response.accessTokenExpiry;
     final refreshToken = response.refreshToken;
+    final refreshTokenExpiry = response.refreshTokenExpiry;
     final tusdToken = response.tusdToken;
+    final tusdTokenExpiry = response.tusdTokenExpiry;
 
     await secureStorage.write(key: 'accessToken', value: accessToken);
+    await secureStorage.write(key: 'accessTokenExpiry', value: accessTokenExpiry);
     await secureStorage.write(key: 'refreshToken', value: refreshToken);
+    await secureStorage.write(key: 'refreshTokenExpiry', value: refreshTokenExpiry);
     await secureStorage.write(key: 'tusdToken', value: tusdToken);
+    await secureStorage.write(key: 'tusdTokenExpiry', value: tusdTokenExpiry);
   }
 
   Future<void> _clearUserData() async {

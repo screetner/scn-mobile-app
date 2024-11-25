@@ -2,9 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tus_client_background_demo/services/interceptors/ExpiredTokenInterceptor.dart';
-import 'package:tus_client_background_demo/types/api/RefreshToken.dart';
 
 import '../services/models/SecureStorageCache.dart';
+import '../types/api/Auth.dart';
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
@@ -60,7 +60,7 @@ class ApiClient {
       final refreshStatus = refreshResponse.statusCode;
 
       if(refreshStatus != 401 && refreshStatus != 403) {
-        final refreshResponseData = RefreshTokenResponseDTO.fromJson(refreshResponse.data!);
+        final refreshResponseData = RefreshResponseDTO.fromJson(refreshResponse.data!);
         await secureStorage.write(key: 'accessToken', value: refreshResponseData.accessToken);
         await secureStorage.write(key: 'refreshToken', value: refreshResponseData.refreshToken);
       } else {
