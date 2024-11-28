@@ -12,6 +12,7 @@ import 'package:tus_client_background_demo/types/api/VideoSession.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../services/VideoSession.dart';
+import '../services/models/SecureStorageCache.dart';
 import '../types/ImmutableVideoRecordManagerContext.dart';
 
 enum RecordState { STOPPED, RECORDING, PAUSED }
@@ -34,6 +35,7 @@ class ImageLocationRecordController {
   RandomAccessFile? _tlocWriteStream;
 
   List<String> allVideoFileName = [];
+  List<int> allVideoRecordedTime = [];
   List<String> allTlocFileName = [];
 
   RecordState _recordState = RecordState.STOPPED;
@@ -196,6 +198,7 @@ class ImageLocationRecordController {
       _currentTlocPath = '${_sessionDirectory.path}/$tlocFileName';
 
       allVideoFileName.add(videoFileName);
+      allVideoRecordedTime.add(nowUnix);
       allTlocFileName.add(tlocFileName);
 
       _tlocRecordCount = 0;
@@ -252,10 +255,11 @@ class ImageLocationRecordController {
 
       final videoCount = allVideoFileName.length;
 
-      final videpTlocTuples = <Map<String, String>>[];
+      final videpTlocTuples = <Map<String, dynamic>>[];
       for (int i = 0; i < videoCount; i++) {
-        final videoTlocMap = <String, String>{
+        final videoTlocMap = <String, dynamic>{
           'videoName': allVideoFileName[i],
+          'videoRecordedTime': allVideoRecordedTime[i],
           'tlocName': allTlocFileName[i],
         };
         videpTlocTuples.add(videoTlocMap);
@@ -266,8 +270,9 @@ class ImageLocationRecordController {
 
       infoMap['videoCount'] = videoCount;
       infoMap['sessionStartTime'] = _sessionStartTime;
-      infoMap['videoTlocTuples'] = videpTlocTuples;
       infoMap['videoSessionId'] = videoSessionId;
+      infoMap['recordedUserId'] = userId;
+      infoMap['videoTlocTuples'] = videpTlocTuples;
 
       final infoFile = File('${_sessionDirectory.path}/information.json');
       final jsonString = jsonEncode(infoMap);
