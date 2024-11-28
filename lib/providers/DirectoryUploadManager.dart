@@ -1,14 +1,18 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:tus_client_background_demo/services/VideoSession.dart';
 import 'package:tus_client_background_demo/services/models/ProgressFileStore.dart';
+import 'package:tus_client_background_demo/services/models/SecureStorageCache.dart';
 import 'package:tus_client_background_demo/types/ImmutableDirectoryUploadInput.dart';
 import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
 import 'package:tus_client_background_demo/providers/NotificationManager.dart';
+import 'package:tus_client_background_demo/types/api/VideoSession.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../types/ImmutableUploadManagerContext.dart';
 import 'ApiClient.dart';
+import 'VideoMetadataProvider.dart';
 
 class DirectoryUploadManager {
   bool _isInitialized = false;
@@ -97,6 +101,7 @@ class DirectoryUploadManager {
       uploadDirectory: uploadDirectory,
       chunkSize: chunkSize,
       tusdServerUrl: _context.tusdServerUrl,
+      apiUrl: _context.apiUrl,
       progressStoreFile: _context.progressStoreFile,
       tusStoreDirectory: _context.tusStoreDirectory,
       notificationChannelKey: _context.notificationChannelKey,
@@ -132,11 +137,16 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
       print("ENTERS, WORKMANAGER");
+
+      // Initializing Sequence
       final DirectoryUploadInput uploadInput = DirectoryUploadInput.toObject(
           inputData!);
       final UploadContext uploadContext = UploadContext.toObject(inputData);
 
       final NotificationManager nm = await NotificationManager.createInstance(uploadContext);
+
+      final apiClient = await ApiClient.createInstance(uploadContext);
+      final vs = await VideoSession.createInstance(apiClient);
 
       final tusdToken = uploadContext.tusdToken;
 
@@ -163,35 +173,58 @@ void callbackDispatcher() {
       final uploadProgress = client.getUploadProgressPercentage;
 
       final progressStore = new ProgressFileStore(progressFile);
+
+      final secureStorage = SecureStorageCache();
+      final userId = await secureStorage.read(key: 'userId');
+      final sessionName = uploadDirectoryPath.split('/').last;
+      final sessionCloudName = sessionName + '_' + (userId ?? "");
+
+      final videoSessionInfo = await VideoMetadataProvider().getVideoSessionInfo(uploadDirectory);
+      final videoSessionId = videoSessionInfo.videoSessionId;
+
+      // Uploading Sequence
+      vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 0, state: VideoSessionStateEnum.uploading));
+      progressStore.set(nmFingerprint, 0.0);
+
+      final setProgress = () {
+        final up = uploadProgress();
+        nm.updateProgressBarFor(nmFingerprint, up);
+        progressStore.set(nmFingerprint, up);
+        vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: up.floor(), state: VideoSessionStateEnum.uploading));
+      };
+
       await client.upload(
         onFileUploadStart: (client, estimate) {
-          nm.updateProgressBarFor(nmFingerprint, uploadProgress());
-          progressStore.set(nmFingerprint, 0.0);
+          // TODO: await async functions
+          setProgress();
         },
 
         onFileUploadProgress: throttle((progressPercentage, estimate) {
-          final up = uploadProgress();
-          nm.updateProgressBarFor(nmFingerprint, up);
-          progressStore.set(nmFingerprint, up);
+          setProgress();
         }, const Duration(seconds: 1)),
         // Ensure that the progressBar won't be called more than once per second.
 
         onFileUploadComplete: () {
-          nm.updateProgressBarFor(nmFingerprint, uploadProgress());
-          progressStore.set(nmFingerprint, 1.0);
+          setProgress();
           print("UPLOAD FINISHED");
         },
 
         // TODO: handle if the access token is expired
         tusServerUri: uploadInput.tusdServerUrl,
         genericMetadata: {
-          'sessionName': uploadDirectoryPath.split('/').last,
+          'sessionName': sessionName,
+          'sessionCloudName': sessionCloudName,
         },
         genericHeaders: {
           'AuthorizationTusd': 'Bearer ${tusdToken}',
         },
         measureUploadSpeed: false,
       );
+
+      // Ending Sequence
+      vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 100, state: VideoSessionStateEnum.uploaded));
+      nm.updateProgressBarFor(nmFingerprint, 100.0);
+      progressStore.set(nmFingerprint, 1.0);
 
       nm.removeNotificationIdFor(nmFingerprint);
 

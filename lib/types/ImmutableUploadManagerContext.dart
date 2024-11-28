@@ -4,6 +4,7 @@ import 'dart:ui';
 
 class ImmutableUploadManagerContext {
   final Uri tusdServerUrl;
+  final Uri apiUrl;
   final Directory tusStoreDirectory;
   final File progressStoreFile;
   final String notificationChannelKey;
@@ -20,6 +21,7 @@ class ImmutableUploadManagerContext {
 
   ImmutableUploadManagerContext({
     required this.tusdServerUrl,
+    required this.apiUrl,
     required this.tusStoreDirectory,
     required this.progressStoreFile,
     required this.notificationChannelKey,
@@ -39,6 +41,7 @@ class ImmutableUploadManagerContext {
   ImmutableUploadManagerContext clone() {
     return new ImmutableUploadManagerContext (
       tusdServerUrl: this.tusdServerUrl,
+      apiUrl: this.apiUrl,
       tusStoreDirectory: this.tusStoreDirectory,
       progressStoreFile:  this.progressStoreFile,
       notificationChannelKey: this.notificationChannelKey,
@@ -56,6 +59,7 @@ class ImmutableUploadManagerContext {
   Map<String, dynamic> toJson() {
     Map<String,dynamic> map = {
       'tusd_server_url': tusdServerUrl.toString(),
+      'api_url': apiUrl.toString(),
       'tus_store_directory_path': tusStoreDirectory.path,
       'progress_store_file_path': progressStoreFile.path,
       'notification_channel_key': notificationChannelKey,
@@ -77,6 +81,7 @@ class ImmutableUploadManagerContext {
   static ImmutableUploadManagerContext toObject(Map<String, dynamic> input) {
     return new ImmutableUploadManagerContext(
       tusdServerUrl: Uri.parse(input['tusd_server_url']!),
+      apiUrl: Uri.parse(input['api_url']!),
       tusStoreDirectory: Directory(input['tus_store_directory_path']!),
       progressStoreFile: File(input['progress_store_file_path']!),
       notificationChannelKey: input['notification_channel_key']!,

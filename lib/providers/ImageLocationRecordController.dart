@@ -8,8 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path/path.dart' as path;
 import 'package:tus_client_background_demo/services/LocationRecorder.dart';
+import 'package:tus_client_background_demo/types/api/VideoSession.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../services/VideoSession.dart';
 import '../types/ImmutableVideoRecordManagerContext.dart';
 
 enum RecordState { STOPPED, RECORDING, PAUSED }
@@ -259,9 +261,13 @@ class ImageLocationRecordController {
         videpTlocTuples.add(videoTlocMap);
       }
 
+      final postVideoSessionResponseDTO = await VideoSession().createVideoSession(PostVideoSessionDTO(videoNames: allVideoFileName));
+      final videoSessionId = postVideoSessionResponseDTO.videoSessionId;
+
       infoMap['videoCount'] = videoCount;
       infoMap['sessionStartTime'] = _sessionStartTime;
       infoMap['videoTlocTuples'] = videpTlocTuples;
+      infoMap['videoSessionId'] = videoSessionId;
 
       final infoFile = File('${_sessionDirectory.path}/information.json');
       final jsonString = jsonEncode(infoMap);

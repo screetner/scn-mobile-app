@@ -9,8 +9,8 @@ class ExpiredTokenInterceptor extends Interceptor {
   final Dio _pureDio = Dio();
   static final FlutterSecureStorage secureStorage = SecureStorageCache();
 
-  ExpiredTokenInterceptor() {
-    _pureDio.options.baseUrl = dotenv.env['API_URL']!;
+  ExpiredTokenInterceptor(String apiUrl) {
+    _pureDio.options.baseUrl = apiUrl;
   }
 
   @override

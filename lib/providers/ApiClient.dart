@@ -2,12 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tus_client_background_demo/services/interceptors/ExpiredTokenInterceptor.dart';
+import 'package:tus_client_background_demo/types/ImmutableUploadManagerContext.dart';
 
 import '../services/models/SecureStorageCache.dart';
 import '../types/api/Auth.dart';
 
 class ApiClient {
-  static final ApiClient _instance = ApiClient._internal();
+  static final ApiClient _instance = ApiClient._privateConstructor();
   final FlutterSecureStorage secureStorage = SecureStorageCache();
 
   final Dio _dio = Dio();
@@ -16,9 +17,9 @@ class ApiClient {
     return _instance;
   }
 
-  ApiClient._internal() {
-    _dio.options.baseUrl = dotenv.env['API_URL']!;
-    _dio.interceptors.add(ExpiredTokenInterceptor());
+  ApiClient._withAPIUrl(String apiUrl) {
+    _dio.options.baseUrl = apiUrl;
+    _dio.interceptors.add(ExpiredTokenInterceptor(apiUrl));
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
         final accessToken = await getAccessToken();
@@ -40,6 +41,19 @@ class ApiClient {
         handler.next(error); // Continue with the error
       },
     ));
+  }
+
+  ApiClient._privateConstructor() : this._withAPIUrl(dotenv.env['API_URL']!);
+
+  static Future<ApiClient> createInstance(UploadContext context) async {
+    try {
+      return ApiClient._withAPIUrl(context.apiUrl.toString());
+    }  catch (e, stackTrace) {
+      // TODO: implement error handling
+      print('An error occurred: $e');
+      print('Stack trace: $stackTrace');
+      throw e;
+    }
   }
 
   Future<void> refreshAccessToken() async {

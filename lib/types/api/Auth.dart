@@ -72,12 +72,12 @@ class RefreshResponseDTO {
 
   factory RefreshResponseDTO.fromJson(Map<String, dynamic> json) {
     return RefreshResponseDTO(
-      accessToken: json['accessToken'],
-      accessTokenExpiry: json['accessTokenExpiry'],
-      refreshToken: json['refreshToken'],
-      refreshTokenExpiry: json['refreshTokenExpiry'],
-      tusdToken: json['tusdToken'],
-      tusdTokenExpiry: json['tusdTokenExpiry'],
+      accessToken: json['user']['accessToken'],
+      accessTokenExpiry: json['user']['accessTokenExpiry'],
+      refreshToken: json['user']['refreshToken'],
+      refreshTokenExpiry: json['user']['refreshTokenExpiry'],
+      tusdToken: json['user']['tusdToken'],
+      tusdTokenExpiry: json['user']['tusdTokenExpiry'],
     );
   }
 }

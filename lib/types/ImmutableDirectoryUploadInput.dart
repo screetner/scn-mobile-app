@@ -15,6 +15,7 @@ class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
   ImmutableDirectoryUploadInput({
     required this.uploadDirectory,
     required super.tusdServerUrl,
+    required super.apiUrl,
     required super.tusStoreDirectory,
     required super.progressStoreFile,
     required super.notificationChannelKey,
@@ -50,6 +51,7 @@ class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
     return new ImmutableDirectoryUploadInput(
       uploadDirectory: Directory(input['upload_directory_path']!),
       tusdServerUrl: uploadContext.tusdServerUrl,
+      apiUrl: uploadContext.apiUrl,
       tusStoreDirectory: uploadContext.tusStoreDirectory,
       progressStoreFile: uploadContext.progressStoreFile,
       notificationChannelKey: uploadContext.notificationChannelKey,

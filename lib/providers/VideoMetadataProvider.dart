@@ -4,11 +4,9 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
-import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
 import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
-import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:tus_client_background_demo/services/models/SecureStorageCache.dart';
+// import 'package:video_thumbnail/video_thumbnail.dart';
 import '../types/ImmutableVideoRecordManagerContext.dart';
 
 class VideoMetadataProvider {
@@ -50,27 +48,27 @@ class VideoMetadataProvider {
 
       List<Future<VideoInfo>> batchFutures = batch.map((Directory directory) async {
         try {
-          final infoFile = File('${directory.path}/information.json');
-          final infoJsonString = await infoFile.readAsString();
-          final info = jsonDecode(infoJsonString);
+          final info = await getVideoSessionInfo(directory);
 
-          final videoTlocTuples = info['videoTlocTuples'] ?? [];
-          final firstVideoName = videoTlocTuples.first['videoName'] ?? "";
+          final videoTlocTuples = info.videoTlocTuples;
+          final firstVideoName = videoTlocTuples.first.videoName;
           final firstVideoPath = '${directory.path}/$firstVideoName';
           final thumbnail = await _getThumbnail(firstVideoPath);
 
+          final secureStorage = SecureStorageCache();
+          final userId = await secureStorage.read(key: 'userId');
           final sessionName = directory.path
               .split('/')
               .last
               .split('.')
               .first;
-          final sessionTitle = parseAndFormatUnixTimestamp(sessionName) ??
-              sessionName;
+          final sessionTitle = parseAndFormatUnixTimestamp(sessionName) ?? sessionName;
+          final sessionCloudDirectory = sessionTitle + '_' + (userId ?? "");
 
           return VideoInfo(
-              thumbnail: thumbnail,
-              sessionTitle: sessionTitle,
-              sessionDirectory: directory,
+            thumbnail: thumbnail,
+            sessionTitle: sessionTitle,
+            sessionDirectory: directory,
             fingerprint: DirectoryUploadClient.getAsFingerprint(directory.path)
           );
         } catch (e, stackTrace) {
@@ -90,6 +88,14 @@ class VideoMetadataProvider {
     return recordInfoList;
   }
 
+  Future<ImmutableVideoSessionInformation> getVideoSessionInfo(Directory directory) async {
+    final infoFile = File('${directory.path}/information.json');
+    final infoJsonString = await infoFile.readAsString();
+    final info = jsonDecode(infoJsonString);
+
+    return ImmutableVideoSessionInformation.fromJson(info);
+  }
+
   List<Directory> getVideoSessions() {
     return _recordDirectory
         .listSync()
@@ -99,12 +105,15 @@ class VideoMetadataProvider {
   }
 
   Future<Uint8List?> _getThumbnail(String filePath) async {
-    return VideoThumbnail.thumbnailData(
-      video: filePath,
-      imageFormat: ImageFormat.JPEG,
-      maxWidth: 128,
-      quality: 75,
-    );
+    // TODO: change this once we can use video thumbnail
+    return null;
+
+    // return VideoThumbnail.thumbnailData(
+    //   video: filePath,
+    //   imageFormat: ImageFormat.JPEG,
+    //   maxWidth: 128,
+    //   quality: 75,
+    // );
   }
 
   String? parseAndFormatUnixTimestamp(String input) {
@@ -150,3 +159,46 @@ class ImmutableVideoInformation {
 }
 
 typedef VideoInfo = ImmutableVideoInformation;
+
+class ImmutableVideoSessionInformation {
+  final int videoCount;
+  final String sessionStartTime;
+  final List<VideoTlocTuples> videoTlocTuples;
+  final String videoSessionId;
+
+  ImmutableVideoSessionInformation ({
+    required this.videoCount,
+    required this.sessionStartTime,
+    required this.videoTlocTuples,
+    required this.videoSessionId,
+  }) {}
+
+  factory ImmutableVideoSessionInformation.fromJson(Map<String, dynamic> json) {
+    final videoTlocTuplesJson = json['videoTlocTuples'] as List;
+    List<VideoTlocTuples> videoTlocTuplesList = videoTlocTuplesJson.map((i) => VideoTlocTuples.fromJson(i)).toList();
+
+    return ImmutableVideoSessionInformation(
+      videoCount: json['videoCount'],
+      sessionStartTime: json['sessionStartTime'],
+      videoTlocTuples: videoTlocTuplesList,
+      videoSessionId: json['videoSessionId'],
+    );
+  }
+}
+
+class VideoTlocTuples {
+  final String videoName;
+  final String tlocName;
+
+  VideoTlocTuples ({
+    required this.videoName,
+    required this.tlocName,
+  }) {}
+
+  factory VideoTlocTuples.fromJson(Map<String, dynamic> json) {
+    return VideoTlocTuples(
+      videoName: json['videoName'],
+      tlocName: json['tlocName'],
+    );
+  }
+}
