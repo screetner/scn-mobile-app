@@ -33,6 +33,7 @@ class VideoSession {
         data: {
           'uploadProgress': 0,
           'videoNames': body.videoNames,
+          'videoSessionName': body.videoSessionName
         },
       );
       return PostVideoSessionResponseDTO.fromJson(response.data!);
@@ -44,11 +45,10 @@ class VideoSession {
   Future<UpdateVideoSessionResponseDTO> updateVideoSessionState(UpdateVideoSessionDTO body) async {
     try {
       final response = await _apiClient.dio.patch<Map<String, dynamic>>(
-        '/videoSession/updateState',
+        '/videoSession/updateProgress',
         data: {
           'videoSessionId': body.videoSessionId,
           'uploadProgress': body.uploadProgressPercentage,
-          'state': body.state.toString().split('.').last,
         },
       );
       return UpdateVideoSessionResponseDTO.fromJson(response.data!);

@@ -1,16 +1,10 @@
-enum VideoSessionStateEnum {
-  uploading,
-  uploaded,
-  processing,
-  processed,
-  canDelete,
-}
-
 class PostVideoSessionDTO {
   final List<String> videoNames;
+  final String videoSessionName;
 
   PostVideoSessionDTO({
     required this.videoNames,
+    required this.videoSessionName,
   });
 }
 
@@ -31,12 +25,10 @@ class PostVideoSessionResponseDTO {
 class UpdateVideoSessionDTO {
   final String videoSessionId;
   final int uploadProgressPercentage;
-  final VideoSessionStateEnum state;
 
   UpdateVideoSessionDTO({
     required this.videoSessionId,
     required this.uploadProgressPercentage,
-    required this.state,
   });
 }
 

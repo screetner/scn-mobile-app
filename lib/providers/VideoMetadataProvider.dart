@@ -188,16 +188,19 @@ class ImmutableVideoSessionInformation {
 
 class VideoTlocTuples {
   final String videoName;
+  final int videoRecordedTime;
   final String tlocName;
 
   VideoTlocTuples ({
     required this.videoName,
+    required this.videoRecordedTime,
     required this.tlocName,
   }) {}
 
   factory VideoTlocTuples.fromJson(Map<String, dynamic> json) {
     return VideoTlocTuples(
       videoName: json['videoName'],
+      videoRecordedTime: json['videoRecordedTime'],
       tlocName: json['tlocName'],
     );
   }

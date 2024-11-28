@@ -265,7 +265,12 @@ class ImageLocationRecordController {
         videpTlocTuples.add(videoTlocMap);
       }
 
-      final postVideoSessionResponseDTO = await VideoSession().createVideoSession(PostVideoSessionDTO(videoNames: allVideoFileName));
+      final secureStorage = SecureStorageCache();
+      final userId = await secureStorage.read(key: 'userId');
+      final sessionName = _sessionDirectory.path.split('/').last;
+      final sessionCloudName = sessionName + '_' + (userId ?? "");
+
+      final postVideoSessionResponseDTO = await VideoSession().createVideoSession(PostVideoSessionDTO(videoNames: allVideoFileName, videoSessionName: sessionCloudName));
       final videoSessionId = postVideoSessionResponseDTO.videoSessionId;
 
       infoMap['videoCount'] = videoCount;
