@@ -1,7 +1,6 @@
 import 'package:tus_client_background_demo/types/api/VideoSession.dart';
 
 import '../providers/ApiClient.dart';
-import '../types/ImmutableUploadManagerContext.dart';
 
 class VideoSession {
   static final VideoSession _authService = VideoSession._internal(ApiClient());
@@ -44,8 +43,9 @@ class VideoSession {
 
   Future<UpdateVideoSessionResponseDTO> updateVideoSessionState(UpdateVideoSessionDTO body) async {
     try {
+      // TODO: change api path once it changed to `/videoSession/updateProgress`
       final response = await _apiClient.dio.patch<Map<String, dynamic>>(
-        '/videoSession/updateProgress',
+        '/videoSession/updateProcess',
         data: {
           'videoSessionId': body.videoSessionId,
           'uploadProgress': body.uploadProgressPercentage,

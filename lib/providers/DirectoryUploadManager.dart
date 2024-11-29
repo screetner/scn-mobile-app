@@ -183,14 +183,14 @@ void callbackDispatcher() {
       final videoSessionId = videoSessionInfo.videoSessionId;
 
       // Uploading Sequence
-      vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 0, state: VideoSessionStateEnum.uploading));
-      progressStore.set(nmFingerprint, 0.0);
+      await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 0));
+      await progressStore.set(nmFingerprint, 0.0);
 
-      final setProgress = () {
+      final setProgress = () async {
         final up = uploadProgress();
         nm.updateProgressBarFor(nmFingerprint, up);
-        progressStore.set(nmFingerprint, up);
-        vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: up.floor(), state: VideoSessionStateEnum.uploading));
+        await progressStore.set(nmFingerprint, up);
+        await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: up.floor()));
       };
 
       await client.upload(
@@ -222,11 +222,11 @@ void callbackDispatcher() {
       );
 
       // Ending Sequence
-      vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 100, state: VideoSessionStateEnum.uploaded));
       nm.updateProgressBarFor(nmFingerprint, 100.0);
+      await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 100));
       progressStore.set(nmFingerprint, 1.0);
 
-      nm.removeNotificationIdFor(nmFingerprint);
+      await nm.removeNotificationIdFor(nmFingerprint);
 
       return Future.value(true);
     } catch (e, stackTrace) {
