@@ -5,7 +5,7 @@ class DirectoryUploadState {
   late Queue<String> _uploadFilePathsQueue;
   final Set<String> _finishedUploadFilePaths = {};
   String? _onGoingUploadFilePath;
-
+  int _onGoingUploadProgressBytes = 0;
 
   String? get onGoingUploadFilePath => _onGoingUploadFilePath;
 
@@ -40,6 +40,7 @@ class DirectoryUploadState {
   ///
   /// Returns `true` if there is still a file in the queue, `false` otherwise.
   bool iterate() {
+    _onGoingUploadProgressBytes = 0;
     if (_onGoingUploadFilePath != null) {
       _finishedUploadFilePaths.add(_onGoingUploadFilePath!);
       _isFinishedFileSizeCacheDirty = true;
@@ -86,11 +87,18 @@ class DirectoryUploadState {
     }
   }
 
+  void setOnGoingFileUploadProgressBytes(String validatingFilePath, int progressBytes) {
+    if(validatingFilePath != _onGoingUploadFilePath) {
+      return; // TODO: this is a lazy way to ensure the upload progress is correct. Fix if possible.
+    }
+    _onGoingUploadProgressBytes = progressBytes;
+  }
+
   /// Calculates the total file size of all files in the current upload queue,
   /// the ongoing upload file, and the finished upload files.
   ///
   /// Returns the total size in bytes.
-  int getTotalFileSize() {
+  int getTotalUploadSize() {
     if(!_isTotalFileSizeCacheDirty) {
       return _totalFileSizeCache;
     }
@@ -109,6 +117,16 @@ class DirectoryUploadState {
     _isTotalFileSizeCacheDirty = false;
 
     return totalSize;
+  }
+
+  int getTotalUploadProgress() {
+    int totalProgress = 0;
+
+    totalProgress += getFinishedFileSize();
+
+    totalProgress += _onGoingUploadProgressBytes;
+
+    return totalProgress;
   }
 
   /// Computes the total file size of all files that have been marked as finished.

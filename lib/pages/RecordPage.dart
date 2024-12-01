@@ -6,9 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tus_client_background_demo/providers/ImageLocationRecordController.dart';
 
-// TODO: uncomment this
-// import 'package:wakelock/wakelock.dart';
-
 class RecordPage extends StatefulWidget {
   const RecordPage({super.key});
 

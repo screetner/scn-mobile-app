@@ -63,17 +63,16 @@ class DirectoryUploadClient{
           );
 
           final dynamic Function(TusClient, Duration?)? onStart = (TusClient client, Duration? estimate) {
-            _currentFileUploadProgress = 0;
             return onFileUploadStart?.call(client, estimate);
           };
 
           final dynamic Function(double, Duration) onProgress = (double progressPercentage, Duration estimate) {
-            _currentFileUploadProgress = ((progressPercentage / 100) * getFileSize(filePath)).round();
+            final onGoingFileUploadProgress = ((progressPercentage / 100) * getFileSize(filePath)).round();
+            _uploadState.setOnGoingFileUploadProgressBytes(filePath, onGoingFileUploadProgress);
             return onFileUploadProgress?.call(progressPercentage, estimate);
           };
 
           final dynamic Function() onComplete = () {
-            _currentFileUploadProgress = getFileSize(filePath);
             onFileUploadComplete?.call();
           };
 
@@ -98,7 +97,6 @@ class DirectoryUploadClient{
         }
       });
 
-      _currentFileUploadProgress = 0;
       await removeUploadState();
     } catch (e, stackTrace) {
       // TODO: implement error handling
@@ -237,15 +235,7 @@ class DirectoryUploadClient{
   }
 
   int getTotalDirectorySize() {
-    return _uploadState.getTotalFileSize();
-  }
-
-  int getFinishedUploadProgress() {
-    return _uploadState.getFinishedFileSize();
-  }
-
-  int getCurrentUploadFileSize() {
-    return _uploadState.getCurrentFileSize();
+    return _uploadState.getTotalUploadSize();
   }
 
   int getFileSize(String? filePath) {
@@ -253,13 +243,16 @@ class DirectoryUploadClient{
   }
 
   int getUploadProgress() {
-    return getFinishedUploadProgress() + _currentFileUploadProgress;
+    return _uploadState.getTotalUploadProgress();
   }
 
   double getUploadProgressRatio() {
-    return getUploadProgress() / getTotalDirectorySize();
+    final uploadProgress = getUploadProgress();
+    final totalDirectorySize = getTotalDirectorySize();
+    return uploadProgress / totalDirectorySize;
   }
 
+  // TODO: This method is still incorrect (probably).
   double getUploadProgressPercentage() {
     return getUploadProgressRatio() * 100;
   }
@@ -285,7 +278,6 @@ class DirectoryUploadClient{
   late String _fingerprint;
 
   late UploadState _uploadState;
-  int _currentFileUploadProgress = 0;
 
   int? maxChunkSize;
   int? retries;

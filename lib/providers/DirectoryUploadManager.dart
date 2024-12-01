@@ -224,7 +224,7 @@ void callbackDispatcher() {
       // Ending Sequence
       nm.updateProgressBarFor(nmFingerprint, 100.0);
       await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 100));
-      progressStore.set(nmFingerprint, 1.0);
+      await progressStore.set(nmFingerprint, 100.0);
 
       await nm.removeNotificationIdFor(nmFingerprint);
 
