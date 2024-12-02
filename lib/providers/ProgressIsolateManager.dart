@@ -10,7 +10,7 @@ class ProgressIsolateManager {
   StreamSubscription? _subscription;
   bool _isRunning = false;
 
-  Future<void> start(File progressFile, void Function(Map<String, double>) onProgressUpdate) async {
+  Future<void> start(File progressFile, void Function(Map<String, VideoSessionUploadProgress>) onProgressUpdate) async {
     if (_isRunning) return;
     _isRunning = true;
 
@@ -23,7 +23,7 @@ class ProgressIsolateManager {
         _sendPort = message;
         _sendPort!.send(progressFile.path);
         completer.complete();
-      } else if (message is Map<String, double>) {
+      } else if (message is Map<String, VideoSessionUploadProgress>) {
         onProgressUpdate(message);
       } else if (message is Map<String, String> && message.containsKey('error')) {
         print("Error: ${message['error']}");

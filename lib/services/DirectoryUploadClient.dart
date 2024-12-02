@@ -252,7 +252,6 @@ class DirectoryUploadClient{
     return uploadProgress / totalDirectorySize;
   }
 
-  // TODO: This method is still incorrect (probably).
   double getUploadProgressPercentage() {
     return getUploadProgressRatio() * 100;
   }

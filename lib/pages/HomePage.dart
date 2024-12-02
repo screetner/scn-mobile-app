@@ -6,6 +6,9 @@ import 'package:tus_client_background_demo/providers/ErrorAsserter.dart';
 import 'package:tus_client_background_demo/providers/ProgressIsolateManager.dart';
 import 'package:tus_client_background_demo/providers/VideoMetadataProvider.dart';
 
+import '../component/CustomProgressIndicator.dart';
+import '../services/models/ProgressFileStore.dart';
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -16,7 +19,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
   late Future<List<VideoInfo>> _videoInfoListFuture;
   late List<VideoInfo> _videoInfoList;
   final Set<VideoInfo> _expandedCards = {};
-  final Map<String, double> _progressMap = {};
+  final Map<String, VideoSessionUploadProgress> _uploadProgressMap = {};
   late ProgressIsolateManager _progressIsolateManager;
 
   @override
@@ -52,7 +55,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
     await _progressIsolateManager.start(progressFile, (progressMap) {
       setState(() {
-        _progressMap.addAll(progressMap);
+        _uploadProgressMap.addAll(progressMap);
       });
     });
   }
@@ -131,6 +134,11 @@ class _HomePageState extends State<HomePage> with RouteAware {
       ),
     );
 
+    final sessionDirectoryPath = videoInfo.sessionDirectory.path;
+    final baseUP = VideoSessionUploadProgress(progress: 0.0, uploadState: VideoSessionUploadStateEnum.UNUPLOADED);
+    final currentUP = _uploadProgressMap[sessionDirectoryPath];
+    final actualUP = currentUP ?? baseUP;
+
     return SizeTransition(
       sizeFactor: animation,
       child: Card(
@@ -141,11 +149,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
         ),
         child: Column(
           children: [
-            LinearProgressIndicator(
-              value: (_progressMap[videoInfo.sessionDirectory.path] ?? 0.0) / 100,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-            ),
+            CustomProgressIndicator(uploadProgress: actualUP),
             ExpansionTile(
               key: PageStorageKey<VideoInfo>(videoInfo),
               leading: _buildThumbnail(videoInfo.thumbnail),
@@ -211,7 +215,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
     _expandedCards.remove(videoInfo);
     _listKey.currentState!.removeItem(
       index,
-      (context, animation) => _buildRemovedItem(context, removedItem, animation),
+          (context, animation) => _buildRemovedItem(context, removedItem, animation),
       duration: const Duration(milliseconds: 300),
     );
   }
