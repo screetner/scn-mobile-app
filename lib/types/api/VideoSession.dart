@@ -33,15 +33,15 @@ class UpdateVideoSessionDTO {
 }
 
 class UpdateVideoSessionResponseDTO {
-  final String videoSessionId;
+  final String message;
 
   UpdateVideoSessionResponseDTO({
-    required this.videoSessionId,
+    required this.message,
   });
 
   factory UpdateVideoSessionResponseDTO.fromJson(Map<String, dynamic> json) {
     return UpdateVideoSessionResponseDTO(
-        videoSessionId: json['videoSessionId']
+        message: json['message']
     );
   }
 }
