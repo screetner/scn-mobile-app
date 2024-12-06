@@ -192,7 +192,8 @@ void callbackDispatcher() {
         final up = VideoSessionUploadProgress(progress: progress, uploadState: VideoSessionUploadStateEnum.UPLOADING);
         nm.updateProgressBarFor(nmFingerprint, progress);
         await progressStore.set(nmFingerprint, up);
-        await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: progress.floor()));
+        final uploading_progress = progress < 100 ? progress.floor() : 99;
+        await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: uploading_progress));
       };
 
       await client.upload(
