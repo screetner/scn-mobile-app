@@ -39,7 +39,7 @@ Future<UploadContext> getEnvUploadContext() async {
     tusdServerUrl: Uri.parse(dotenv.env['TUSD_SERVER_URL']!),
     apiUrl: Uri.parse(dotenv.env['API_URL']!),
     tusStoreDirectory: Directory(dotenv.env['TUS_STORE_DIRECTORY'] ?? path.join((await getApplicationSupportDirectory()).path, 'tusStore')),
-    progressStoreFile: File(dotenv.env['PROGRESS_STORE_FILE'] ?? path.join((await getApplicationSupportDirectory()).path, 'progressStore')),
+    uploadProgressDirectory: Directory(dotenv.env['PROGRESS_STORE_FILE'] ?? path.join((await getApplicationSupportDirectory()).path, 'progressStore')),
     notificationChannelKey: dotenv.env['NOTIFICATION_CHANNEL_KEY'] ?? 'scn-mobile-app-progress-notification',
     notificationChannelGroupKey: dotenv.env['NOTIFICATION_CHANNEL_GROUP_KEY'] ?? 'scn-mobile-app',
     notificationChannelName: dotenv.env['NOTIFICATION_CHANNEL_NAME'],

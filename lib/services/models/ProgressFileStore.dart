@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:synchronized/synchronized.dart';
 
 enum VideoSessionUploadStateEnum {
   UNUPLOADED,
@@ -42,53 +41,104 @@ abstract class ProgressStore {
 }
 
 class ProgressFileStore implements ProgressStore {
-  ProgressFileStore(this.file);
-
-  final File file;
-  Map<String, VideoSessionUploadProgress> _progressMap = {};
-  final _lock = Lock();
-
-  Future<void> _loadFromFile() async {
-    await _lock.synchronized(() async {
-      if (await file.exists()) {
-        final contents = await file.readAsString();
-        final Map<String, dynamic> jsonMap = jsonDecode(contents);
-        _progressMap = jsonMap.map((key, value) => MapEntry(key, VideoSessionUploadProgress.fromJson(value)));
-      }
-    });
+  ProgressFileStore(this.progressFileDirectory) {
+    if (!progressFileDirectory.existsSync()) {
+      progressFileDirectory.createSync(recursive: true);
+    }
   }
 
-  Future<void> _saveToFile() async {
-    await _lock.synchronized(() async {
-      final jsonMap = _progressMap.map((key, value) => MapEntry(key, value.toJson()));
-      final contents = jsonEncode(jsonMap);
-      await file.writeAsString(contents, mode: FileMode.writeOnly, flush: true);
-    });
-  }
-
-  @override
-  Future<void> set(String fingerprint, VideoSessionUploadProgress uploadProgress) async {
-    await _loadFromFile();
-    _progressMap[fingerprint] = uploadProgress;
-    await _saveToFile();
-  }
+  Directory progressFileDirectory;
 
   @override
   Future<VideoSessionUploadProgress?> get(String fingerprint) async {
-    await _loadFromFile();
-    return _progressMap[fingerprint];
-  }
+    final file = _getAsFile(fingerprint);
 
-  @override
-  Future<void> remove(String fingerprint) async {
-    await _loadFromFile();
-    _progressMap.remove(fingerprint);
-    await _saveToFile();
+    if (!await file.exists()) {
+      return null;
+    }
+
+    return await _commitTransaction(_loadFromFile, file, FileMode.read, FileLock.blockingShared);
   }
 
   @override
   Future<Map<String, VideoSessionUploadProgress>> getAll() async {
-    await _loadFromFile();
-    return _progressMap;
+    try {
+      final Map<String, VideoSessionUploadProgress> allProgress = {};
+
+      final files = progressFileDirectory.listSync().whereType<File>();
+      final uploadProgressFutures = files.map((file) async {
+        final fingerprint = file.uri.pathSegments.last;
+        final progress = await _commitTransaction(
+            _loadFromFile, file, FileMode.read, FileLock.blockingShared);
+        return MapEntry(fingerprint, progress);
+      }).toList();
+
+      final results = await Future.wait(uploadProgressFutures);
+      for (final entry in results) {
+        if (entry.value != null) {
+          allProgress[entry.key] = entry.value!;
+        }
+      }
+
+      return allProgress;
+    } catch (e) {
+      print('Error processing progress directory ${progressFileDirectory.path}: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> remove(String fingerprint) async {
+    final file = _getAsFile(fingerprint);
+
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
+
+  @override
+  Future<void> set(String fingerprint, VideoSessionUploadProgress uploadProgress) async {
+    final file = _getAsFile(fingerprint);
+
+    if (!await file.exists()) {
+      await file.create(recursive: true);
+    }
+
+    await _commitTransaction((fileStream) async {
+      final contents = jsonEncode(uploadProgress.toJson());
+      await fileStream.writeString(contents);
+    }, file, FileMode.write, FileLock.blockingExclusive);
+  }
+
+  Future<VideoSessionUploadProgress> _loadFromFile(RandomAccessFile fileStream) async {
+    final fileStreamLength = await fileStream.length();
+    final fileContent = await fileStream.read(fileStreamLength);
+    final contents = utf8.decode(fileContent);
+    final Map<String, dynamic> jsonMap = jsonDecode(contents);
+    return VideoSessionUploadProgress.fromJson(jsonMap);
+  }
+
+  Future<dynamic> _commitTransaction(Future<dynamic> Function(RandomAccessFile) transaction, File file, FileMode fileMode, FileLock fileLock) async {
+    dynamic result;
+    final fileSink = await file.open(mode: fileMode);
+    try {
+      await fileSink.lock(fileLock);
+      result = await transaction(fileSink);
+    } finally {
+      await fileSink.unlock();
+      await fileSink.close();
+    }
+    return result;
+  }
+
+  File _getAsFile(String fingerprint) {
+    final sanitizedFingerprint = convertToFingerprint(fingerprint);
+    final filePath = '${progressFileDirectory.path}/$sanitizedFingerprint';
+    final file = File(filePath);
+    return file;
+  }
+
+  static String convertToFingerprint(String fingerprint) {
+    return fingerprint.replaceAll('/', '___');
   }
 }

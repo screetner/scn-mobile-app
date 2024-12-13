@@ -51,7 +51,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
   Future<void> _startProgressIsolate() async {
     final context = DirectoryUploadManager().getContext();
-    final progressFile = context.progressStoreFile;
+    final progressFile = context.uploadProgressDirectory;
 
     await _progressIsolateManager.start(progressFile, (progressMap) {
       setState(() {
@@ -135,8 +135,9 @@ class _HomePageState extends State<HomePage> with RouteAware {
     );
 
     final sessionDirectoryPath = videoInfo.sessionDirectory.path;
+    final sessionFingerprint = ProgressFileStore.convertToFingerprint(sessionDirectoryPath);
     final baseUP = VideoSessionUploadProgress(progress: 0.0, uploadState: VideoSessionUploadStateEnum.UNUPLOADED);
-    final currentUP = _uploadProgressMap[sessionDirectoryPath];
+    final currentUP = _uploadProgressMap[sessionFingerprint];
     final actualUP = currentUP ?? baseUP;
 
     return SizeTransition(

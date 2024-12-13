@@ -49,7 +49,6 @@ dependencies:
   geolocator: ^13.0.1
   camera: ^0.11.0+2
   wakelock_plus: ^1.2.8
-  synchronized: ^3.3.0+3
   flutter_launcher_icons: ^0.14.1
 
 dev_dependencies:

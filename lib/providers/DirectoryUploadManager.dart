@@ -52,6 +52,9 @@ class DirectoryUploadManager {
 
   void deleteDirectory({required Directory deleteDirectory}) {
     deleteDirectory.deleteSync(recursive: true);
+    // TODO: remove directory from progressFile
+    // final progressStore = new ProgressFileStore(progressFile);
+    // progressStore.remove(deleteDirectory.path);
   }
 
   Future<void> uploadDirectory({required Directory uploadDirectory, int? chunkSize}) async {
@@ -102,7 +105,7 @@ class DirectoryUploadManager {
       chunkSize: chunkSize,
       tusdServerUrl: _context.tusdServerUrl,
       apiUrl: _context.apiUrl,
-      progressStoreFile: _context.progressStoreFile,
+      uploadProgressDirectory: _context.uploadProgressDirectory,
       tusStoreDirectory: _context.tusStoreDirectory,
       notificationChannelKey: _context.notificationChannelKey,
       notificationChannelGroupKey: _context.notificationChannelGroupKey,
@@ -152,11 +155,11 @@ void callbackDispatcher() {
 
       final storeDirectory = uploadInput.tusStoreDirectory;
 
-      final progressFile = uploadContext.progressStoreFile;
+      final uploadProgressDirectory = uploadContext.uploadProgressDirectory;
 
       final uploadDirectory = uploadInput.uploadDirectory;
       final uploadDirectoryPath = uploadDirectory.path;
-      final nmFingerprint = uploadDirectoryPath;
+      final nmFingerprint = ProgressFileStore.convertToFingerprint(uploadDirectoryPath);
       final chunkSize = uploadInput.chunkSize ??
           (512 * 1024); // 512 kB by default
 
@@ -172,7 +175,7 @@ void callbackDispatcher() {
 
       final uploadProgress = client.getUploadProgressPercentage;
 
-      final progressStore = new ProgressFileStore(progressFile);
+      final progressStore = new ProgressFileStore(uploadProgressDirectory);
 
       final secureStorage = SecureStorageCache();
       final userId = await secureStorage.read(key: 'userId');
@@ -190,7 +193,7 @@ void callbackDispatcher() {
       final setProgress = () async {
         final progress = uploadProgress();
         final up = VideoSessionUploadProgress(progress: progress, uploadState: VideoSessionUploadStateEnum.UPLOADING);
-        nm.updateProgressBarFor(nmFingerprint, progress);
+        nm.updateProgressBarFor(uploadDirectoryPath, progress);
         await progressStore.set(nmFingerprint, up);
         final uploading_progress = progress < 100 ? progress.floor() : 99;
         await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: uploading_progress));
@@ -226,11 +229,11 @@ void callbackDispatcher() {
 
       // Ending Sequence
       final finishingUP = VideoSessionUploadProgress(progress: 100.0, uploadState: VideoSessionUploadStateEnum.UPLOADED);
-      nm.updateProgressBarFor(nmFingerprint, finishingUP.progress);
+      nm.updateProgressBarFor(uploadDirectoryPath, finishingUP.progress);
       await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 100));
       await progressStore.set(nmFingerprint, finishingUP);
 
-      await nm.removeNotificationIdFor(nmFingerprint);
+      await nm.removeNotificationIdFor(uploadDirectoryPath);
 
       return Future.value(true);
     } catch (e, stackTrace) {

@@ -10,7 +10,7 @@ class ProgressIsolateManager {
   StreamSubscription? _subscription;
   bool _isRunning = false;
 
-  Future<void> start(File progressFile, void Function(Map<String, VideoSessionUploadProgress>) onProgressUpdate) async {
+  Future<void> start(Directory progressUploadDirectory, void Function(Map<String, VideoSessionUploadProgress>) onProgressUpdate) async {
     if (_isRunning) return;
     _isRunning = true;
 
@@ -21,7 +21,7 @@ class ProgressIsolateManager {
     _subscription = _receivePort!.listen((message) {
       if (message is SendPort) {
         _sendPort = message;
-        _sendPort!.send(progressFile.path);
+        _sendPort!.send(progressUploadDirectory.path);
         completer.complete();
       } else if (message is Map<String, VideoSessionUploadProgress>) {
         onProgressUpdate(message);
@@ -50,8 +50,8 @@ class ProgressIsolateManager {
 
     await for (final message in receivePort) {
       if (message is String) {
-        final progressFile = File(message);
-        final progressStore = ProgressFileStore(progressFile);
+        final progressUploadDirectory = Directory(message);
+        final progressStore = ProgressFileStore(progressUploadDirectory);
 
         timer = Timer.periodic(Duration(seconds: 1), (timer) async {
           try {

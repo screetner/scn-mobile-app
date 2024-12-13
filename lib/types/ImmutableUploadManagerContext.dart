@@ -6,7 +6,7 @@ class ImmutableUploadManagerContext {
   final Uri tusdServerUrl;
   final Uri apiUrl;
   final Directory tusStoreDirectory;
-  final File progressStoreFile;
+  final Directory uploadProgressDirectory;
   final String notificationChannelKey;
   late final String notificationChannelKeySilent;
   late final String notificationChannelKeyAudible;
@@ -23,7 +23,7 @@ class ImmutableUploadManagerContext {
     required this.tusdServerUrl,
     required this.apiUrl,
     required this.tusStoreDirectory,
-    required this.progressStoreFile,
+    required this.uploadProgressDirectory,
     required this.notificationChannelKey,
     required this.notificationChannelGroupKey,
     required this.tusdToken,
@@ -43,7 +43,7 @@ class ImmutableUploadManagerContext {
       tusdServerUrl: this.tusdServerUrl,
       apiUrl: this.apiUrl,
       tusStoreDirectory: this.tusStoreDirectory,
-      progressStoreFile:  this.progressStoreFile,
+      uploadProgressDirectory:  this.uploadProgressDirectory,
       notificationChannelKey: this.notificationChannelKey,
       notificationChannelGroupKey: this.notificationChannelGroupKey,
       notificationChannelName: this.notificationChannelName,
@@ -61,7 +61,7 @@ class ImmutableUploadManagerContext {
       'tusd_server_url': tusdServerUrl.toString(),
       'api_url': apiUrl.toString(),
       'tus_store_directory_path': tusStoreDirectory.path,
-      'progress_store_file_path': progressStoreFile.path,
+      'progress_store_file_path': uploadProgressDirectory.path,
       'notification_channel_key': notificationChannelKey,
       'notification_channel_group_key': notificationChannelGroupKey,
       'notification_channel_name': notificationChannelName,
@@ -83,7 +83,7 @@ class ImmutableUploadManagerContext {
       tusdServerUrl: Uri.parse(input['tusd_server_url']!),
       apiUrl: Uri.parse(input['api_url']!),
       tusStoreDirectory: Directory(input['tus_store_directory_path']!),
-      progressStoreFile: File(input['progress_store_file_path']!),
+      uploadProgressDirectory: Directory(input['progress_store_file_path']!),
       notificationChannelKey: input['notification_channel_key']!,
       notificationChannelGroupKey: input['notification_channel_group_key']!,
       notificationChannelName: input['notification_channel_name'],
