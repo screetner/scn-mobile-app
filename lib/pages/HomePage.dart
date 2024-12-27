@@ -162,7 +162,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 Flex(
                   direction: Axis.horizontal,
                   children: [
-                    uploadButton,
+                    if (actualUP.uploadState != VideoSessionUploadStateEnum.UPLOADED) uploadButton,
                     deleteButton,
                   ],
                 ),
