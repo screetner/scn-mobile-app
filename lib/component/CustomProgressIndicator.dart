@@ -60,9 +60,18 @@ class _CustomProgressIndicatorState extends State<CustomProgressIndicator> with 
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: widget.uploadProgress.uploadState == VideoSessionUploadStateEnum.REQUESTING_UPLOAD ?
-        LinearProgressIndicator() :
-        LinearProgressIndicator(value: widget.uploadProgress.progress / 100)
+      child: widget.uploadProgress.uploadState == VideoSessionUploadStateEnum.UPLOADED
+          ? Text(
+        'Uploading finished',
+        style: TextStyle(
+          color: Colors.green,
+          fontWeight: FontWeight.bold,
+        ),
+      )
+          : LinearProgressIndicator(
+        value: widget.uploadProgress.uploadState == VideoSessionUploadStateEnum.REQUESTING_UPLOAD ? null : widget.uploadProgress.progress / 100,
+        color: widget.uploadProgress.uploadState == VideoSessionUploadStateEnum.UPLOADED ? Colors.green : Colors.amber,
+      ),
     );
   }
 }
