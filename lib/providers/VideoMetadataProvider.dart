@@ -4,9 +4,9 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
 import 'package:tus_client_background_demo/services/models/SecureStorageCache.dart';
-// import 'package:video_thumbnail/video_thumbnail.dart';
 import '../types/ImmutableVideoRecordManagerContext.dart';
 
 class VideoMetadataProvider {
@@ -105,15 +105,11 @@ class VideoMetadataProvider {
   }
 
   Future<Uint8List?> _getThumbnail(String filePath) async {
-    // TODO: change this once we can use video thumbnail
-    return null;
-
-    // return VideoThumbnail.thumbnailData(
-    //   video: filePath,
-    //   imageFormat: ImageFormat.JPEG,
-    //   maxWidth: 128,
-    //   quality: 75,
-    // );
+    return VideoThumbnail.thumbnailData(
+      video: filePath,
+      maxWidth: 128,
+      quality: 75,
+    );
   }
 
   String? parseAndFormatUnixTimestamp(String input) {
