@@ -91,48 +91,63 @@ class _RecordPageState extends State<RecordPage> {
       alignment: Alignment.bottomCenter,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            if (_controller!.isStopped) ...[
-              IconButton(
-                icon: const Icon(Icons.fiber_manual_record),
-                iconSize: 48.0,
-                color: Colors.red,
-                onPressed: _onVideoRecordButtonPressed,
-              ),
-            ] else if (_controller!.isRecording) ...[
-              IconButton(
-                icon: const Icon(Icons.pause),
-                iconSize: 48.0,
-                color: Colors.black,
-                onPressed: _onPauseButtonPressed,
-              ),
-              IconButton(
-                icon: const Icon(Icons.stop),
-                iconSize: 48.0,
-                color: Colors.black,
-                onPressed: _onStopButtonPressed,
-              ),
-            ] else if (_controller!.isPausing) ...[
-              IconButton(
-                icon: const Icon(Icons.fiber_manual_record),
-                iconSize: 48.0,
-                color: Colors.red,
-                onPressed: _onResumeButtonPressed,
-              ),
-              IconButton(
-                icon: const Icon(Icons.stop),
-                iconSize: 48.0,
-                color: Colors.black,
-                onPressed: _onStopButtonPressed,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(100.0), // Rounded corners
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8.0,
               ),
             ],
-          ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0), // Padding inside the container
+          child: Row(
+            mainAxisSize: MainAxisSize.min, // Ensures the row only takes as much space as needed
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              if (_controller!.isStopped) ...[
+                IconButton(
+                  icon: const Icon(Icons.fiber_manual_record),
+                  iconSize: 48.0,
+                  color: Colors.red,
+                  onPressed: _onVideoRecordButtonPressed,
+                ),
+              ] else if (_controller!.isRecording) ...[
+                IconButton(
+                  icon: const Icon(Icons.pause),
+                  iconSize: 48.0,
+                  color: Colors.black,
+                  onPressed: _onPauseButtonPressed,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.stop),
+                  iconSize: 48.0,
+                  color: Colors.black,
+                  onPressed: _onStopButtonPressed,
+                ),
+              ] else if (_controller!.isPausing) ...[
+                IconButton(
+                  icon: const Icon(Icons.fiber_manual_record),
+                  iconSize: 48.0,
+                  color: Colors.red,
+                  onPressed: _onResumeButtonPressed,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.stop),
+                  iconSize: 48.0,
+                  color: Colors.black,
+                  onPressed: _onStopButtonPressed,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
   }
+
 
   void _onPauseButtonPressed() {
     if (_controller!.isRecording) {
