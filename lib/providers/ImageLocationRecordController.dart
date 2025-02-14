@@ -283,12 +283,21 @@ class ImageLocationRecordController {
       final jsonString = jsonEncode(infoMap);
       await infoFile.writeAsString(jsonString, mode: FileMode.write, flush: true);
 
+      _clearSessionData();
+
     } catch (e, stackTrace) {
       // TODO: implement error handling
       print('An error occurred: $e');
       print('Stack trace: $stackTrace');
       throw e;
     }
+  }
+
+  void _clearSessionData() {
+    allVideoFileName.clear();
+    allVideoRecordedTime.clear();
+    allTlocFileName.clear();
+    _sessionStartTime = null;
   }
 
   Future<void> _moveFile(String fromPath, String toPath) async {
