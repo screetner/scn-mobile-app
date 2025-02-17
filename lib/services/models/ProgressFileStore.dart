@@ -91,9 +91,14 @@ class ProgressFileStore implements ProgressStore {
   Future<void> remove(String fingerprint) async {
     final file = _getAsFile(fingerprint);
 
-    if (await file.exists()) {
-      await file.delete();
+    if (!await file.exists()) {
+      return;
     }
+
+    await _commitTransaction((fileStream) async {
+      await fileStream.truncate(0);
+      await file.delete();
+    }, file, FileMode.write, FileLock.blockingExclusive);
   }
 
   @override
@@ -106,6 +111,7 @@ class ProgressFileStore implements ProgressStore {
 
     await _commitTransaction((fileStream) async {
       final contents = jsonEncode(uploadProgress.toJson());
+      await fileStream.truncate(0);
       await fileStream.writeString(contents);
     }, file, FileMode.write, FileLock.blockingExclusive);
   }
