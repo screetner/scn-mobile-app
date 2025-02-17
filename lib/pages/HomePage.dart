@@ -286,9 +286,14 @@ class _HomePageState extends State<HomePage> with RouteAware {
             ),
             TextButton(
               child: Text('Delete'),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
+
+                final progressStore = new ProgressFileStore(DirectoryUploadManager().getContext().uploadProgressDirectory);
+                final psFingerprint = ProgressFileStore.convertToFingerprint(videoInfo.sessionDirectory.path);
+                await progressStore.remove(psFingerprint);
                 DirectoryUploadManager().deleteDirectory(deleteDirectory: videoInfo.sessionDirectory);
+
                 _removeItem(videoInfo);
                 _showDeleteNotification(context);
               },
