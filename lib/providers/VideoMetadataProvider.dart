@@ -6,7 +6,6 @@ import 'dart:typed_data';
 
 import 'package:get_thumbnail_video/video_thumbnail.dart';
 import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
-import 'package:tus_client_background_demo/services/models/SecureStorageCache.dart';
 import '../types/ImmutableVideoRecordManagerContext.dart';
 
 class VideoMetadataProvider {
@@ -55,15 +54,12 @@ class VideoMetadataProvider {
           final firstVideoPath = '${directory.path}/$firstVideoName';
           final thumbnail = await _getThumbnail(firstVideoPath);
 
-          final secureStorage = SecureStorageCache();
-          final userId = await secureStorage.read(key: 'userId');
           final sessionName = directory.path
               .split('/')
               .last
               .split('.')
               .first;
           final sessionTitle = parseAndFormatUnixTimestamp(sessionName) ?? sessionName;
-          final sessionCloudDirectory = sessionTitle + '_' + (userId ?? "");
 
           return VideoInfo(
             thumbnail: thumbnail,
@@ -73,9 +69,9 @@ class VideoMetadataProvider {
           );
         } catch (e, stackTrace) {
           return VideoInfo(
-              thumbnail: null,
-              sessionTitle: e.toString(),
-              sessionDirectory: directory,
+            thumbnail: null,
+            sessionTitle: e.toString(),
+            sessionDirectory: directory,
             fingerprint: DirectoryUploadClient.getAsFingerprint(directory.path)
           );
         }
@@ -88,12 +84,20 @@ class VideoMetadataProvider {
     return recordInfoList;
   }
 
-  Future<ImmutableVideoSessionInformation> getVideoSessionInfo(Directory directory) async {
-    final infoFile = File('${directory.path}/information.json');
+  File getInformationFile(Directory directory) {
+    return File('${directory.path}/information.json');
+  }
+
+  Future<ImmutableVideoSessionInformation> getVideoSessionInfoFromFile(File infoFile) async {
     final infoJsonString = await infoFile.readAsString();
     final info = jsonDecode(infoJsonString);
 
     return ImmutableVideoSessionInformation.fromJson(info);
+  }
+
+  Future<ImmutableVideoSessionInformation> getVideoSessionInfo(Directory directory) async {
+    final infoFile = getInformationFile(directory);
+    return await getVideoSessionInfoFromFile(infoFile);
   }
 
   List<Directory> getVideoSessions() {
@@ -160,7 +164,7 @@ class ImmutableVideoSessionInformation {
   final int videoCount;
   final String sessionStartTime;
   final List<VideoTlocTuples> videoTlocTuples;
-  final String videoSessionId;
+  final String? videoSessionId;
 
   ImmutableVideoSessionInformation ({
     required this.videoCount,

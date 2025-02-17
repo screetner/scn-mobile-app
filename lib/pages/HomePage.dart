@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:tus_client_background_demo/presentations/ScreetnerMainApp.dart';
@@ -7,7 +9,9 @@ import 'package:tus_client_background_demo/providers/ProgressIsolateManager.dart
 import 'package:tus_client_background_demo/providers/VideoMetadataProvider.dart';
 
 import '../component/CustomProgressIndicator.dart';
+import '../services/VideoSession.dart';
 import '../services/models/ProgressFileStore.dart';
+import '../types/api/VideoSession.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -111,7 +115,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
           onPressed: () {
-            Asserter().handle(context, () {
+            Asserter().handle(context, () async {
+              await _requestUploadVideoSession(videoInfo.sessionDirectory);
               DirectoryUploadManager().uploadDirectory(uploadDirectory: videoInfo.sessionDirectory);
             });
           },
@@ -208,6 +213,30 @@ class _HomePageState extends State<HomePage> with RouteAware {
       )
           : null,
     );
+  }
+
+  Future<void> _requestUploadVideoSession(Directory sessionDirectory) async {
+    File infoFile =  VideoMetadataProvider().getInformationFile(sessionDirectory);
+    final info = await VideoMetadataProvider().getVideoSessionInfoFromFile(infoFile);
+    final allVideoFileName = info.videoTlocTuples.map((tuple) => tuple.videoName).toList();
+
+    final infoFileStr = await infoFile.readAsString();
+    final Map<String, dynamic> infoJson = jsonDecode(infoFileStr);
+
+    if(infoJson['videoSessionId'] == null) {
+      final userId = infoJson['recordedUserId'];
+      final sessionName = sessionDirectory.path.split('/').last;
+      final sessionCloudName = sessionName + '_' + (userId ?? "");
+
+      final postVideoSessionResponseDTO = await VideoSession()
+          .createVideoSession(PostVideoSessionDTO(
+              videoNames: allVideoFileName,
+              videoSessionName: sessionCloudName));
+
+      final videoSessionId = postVideoSessionResponseDTO.videoSessionId;
+      infoJson['videoSessionId'] = videoSessionId;
+      await infoFile.writeAsString(jsonEncode(infoJson));
+    }
   }
 
   void _removeItem(VideoInfo videoInfo) {

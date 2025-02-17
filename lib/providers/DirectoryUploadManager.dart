@@ -186,7 +186,7 @@ void callbackDispatcher() {
       final videoSessionId = videoSessionInfo.videoSessionId;
 
       // Uploading Sequence
-      await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 0));
+      await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId!, uploadProgressPercentage: 0));
       final startingUP = VideoSessionUploadProgress(progress: 100.0, uploadState: VideoSessionUploadStateEnum.REQUESTING_UPLOAD);
       await progressStore.set(nmFingerprint, startingUP);
 

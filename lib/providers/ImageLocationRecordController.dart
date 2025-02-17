@@ -267,15 +267,9 @@ class ImageLocationRecordController {
 
       final secureStorage = SecureStorageCache();
       final userId = await secureStorage.read(key: 'userId');
-      final sessionName = _sessionDirectory.path.split('/').last;
-      final sessionCloudName = sessionName + '_' + (userId ?? "");
-
-      final postVideoSessionResponseDTO = await VideoSession().createVideoSession(PostVideoSessionDTO(videoNames: allVideoFileName, videoSessionName: sessionCloudName));
-      final videoSessionId = postVideoSessionResponseDTO.videoSessionId;
 
       infoMap['videoCount'] = videoCount;
       infoMap['sessionStartTime'] = _sessionStartTime;
-      infoMap['videoSessionId'] = videoSessionId;
       infoMap['recordedUserId'] = userId;
       infoMap['videoTlocTuples'] = videpTlocTuples;
 
