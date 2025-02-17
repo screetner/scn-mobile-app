@@ -159,7 +159,7 @@ void callbackDispatcher() {
 
       final uploadDirectory = uploadInput.uploadDirectory;
       final uploadDirectoryPath = uploadDirectory.path;
-      final nmFingerprint = ProgressFileStore.convertToFingerprint(uploadDirectoryPath);
+      final psFingerprint = ProgressFileStore.convertToFingerprint(uploadDirectoryPath);
       final chunkSize = uploadInput.chunkSize ??
           (512 * 1024); // 512 kB by default
 
@@ -188,13 +188,13 @@ void callbackDispatcher() {
       // Uploading Sequence
       await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId!, uploadProgressPercentage: 0));
       final startingUP = VideoSessionUploadProgress(progress: 100.0, uploadState: VideoSessionUploadStateEnum.REQUESTING_UPLOAD);
-      await progressStore.set(nmFingerprint, startingUP);
+      await progressStore.set(psFingerprint, startingUP);
 
       final setProgress = () async {
         final progress = uploadProgress();
         final up = VideoSessionUploadProgress(progress: progress, uploadState: VideoSessionUploadStateEnum.UPLOADING);
         nm.updateProgressBarFor(uploadDirectoryPath, progress);
-        await progressStore.set(nmFingerprint, up);
+        await progressStore.set(psFingerprint, up);
         final uploading_progress = progress < 100 ? progress.floor() : 99;
         await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: uploading_progress));
       };
@@ -231,7 +231,7 @@ void callbackDispatcher() {
       final finishingUP = VideoSessionUploadProgress(progress: 100.0, uploadState: VideoSessionUploadStateEnum.UPLOADED);
       nm.updateProgressBarFor(uploadDirectoryPath, finishingUP.progress);
       await vs.updateVideoSessionState(UpdateVideoSessionDTO(videoSessionId: videoSessionId, uploadProgressPercentage: 100));
-      await progressStore.set(nmFingerprint, finishingUP);
+      await progressStore.set(psFingerprint, finishingUP);
 
       await nm.removeNotificationIdFor(uploadDirectoryPath);
 
