@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../presentations/ScreetnerMainApp.dart';
@@ -43,9 +44,18 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ScreetnerHome()));
       } catch (error) {
         print('Login failed: $error');
+
+        final message = switch (error) {
+          DioException e => switch (e.response?.statusCode) {
+            401 => 'Invalid username or password',
+            _ => e.response?.statusMessage ?? e.response?.statusMessage,
+          },
+          _ => error.toString()
+        };
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login failed: $error'),
+            content: Text('Login failed: $message'),
             backgroundColor: Colors.redAccent,
           ),
         );
