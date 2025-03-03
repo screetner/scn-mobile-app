@@ -5,7 +5,6 @@ import 'package:tus_client_background_demo/services/interceptors/ExpiredTokenInt
 import '../pages/HomePage.dart';
 import '../pages/InformationPage.dart';
 import '../pages/LoginPage.dart';
-import '../pages/NotificationPage.dart';
 import '../pages/RecordPage.dart';
 import '../services/models/SecureStorageCache.dart';
 
@@ -52,7 +51,6 @@ class _ScreetnerHomeState extends State<ScreetnerHome> {
       body: <Widget>[
         HomePage(),
         const RecordPage(),
-        const NotificationPage(),
         const InformationPage(),
       ][currentPageIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -83,10 +81,6 @@ class _ScreetnerHomeState extends State<ScreetnerHome> {
           BottomNavigationBarItem(
             icon: _buildNavItemIcon(Icons.videocam, 1),
             label: 'Record',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildNavItemIcon(Icons.list, 2),
-            label: 'History',
           ),
           BottomNavigationBarItem(
             icon: _buildNavItemIcon(Icons.info, 3),

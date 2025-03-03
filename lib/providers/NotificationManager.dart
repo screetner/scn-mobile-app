@@ -33,7 +33,7 @@ class NotificationManager {
     String notificationChannelName = _context.notificationChannelName ?? _context.notificationChannelKey;
     String notificationChannelGroupName = _context.notificationChannelGroupName ?? _context.notificationChannelGroupKey;
     String notificationChannelDescription = _context.notificationChannelDescription ??
-        "NotificationPage.dart channel for reporting file upload progress";
+        "Notification channel for reporting file upload progress";
 
     bool notificationsInitialized = await AwesomeNotifications().initialize(
       null, // default icon
@@ -97,11 +97,12 @@ class NotificationManager {
           channelKey: _context.notificationChannelKeySilent,
           groupKey: _context.notificationChannelGroupKey,
           title: 'Uploading ${fileName} ${progress.toInt()}%',
-          body: 'fanum tax',
+          body: 'Uploading ${fileName} ${progress.toInt()}%',
           category: NotificationCategory.Progress,
           notificationLayout: NotificationLayout.ProgressBar,
           progress: progress,
           locked: true,
+          // icon: 'asset://assets/images/logo3.png',
         ),
       );
     } else {
@@ -111,10 +112,11 @@ class NotificationManager {
           channelKey: _context.notificationChannelKeyAudible,
           groupKey: _context.notificationChannelGroupKey,
           title: 'Upload ${fileName} finished',
-          body: 'skibidi',
+          body: 'Upload ${fileName} finished',
           category: NotificationCategory.Progress,
           notificationLayout: NotificationLayout.Default,
           locked: false,
+          // icon: 'asset://assets/images/logo3.png',
         ),
       );
     }
