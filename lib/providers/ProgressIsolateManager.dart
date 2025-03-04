@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:isolate';
 import 'dart:io';
-import 'package:tus_client_background_demo/services/models/ProgressFileStore.dart';
+import 'package:Screetner/services/models/ProgressFileStore.dart';
 
 class ProgressIsolateManager {
   Isolate? _isolate;

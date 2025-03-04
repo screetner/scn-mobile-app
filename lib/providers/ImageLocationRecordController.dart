@@ -7,11 +7,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path/path.dart' as path;
-import 'package:tus_client_background_demo/services/LocationRecorder.dart';
-import 'package:tus_client_background_demo/types/api/VideoSession.dart';
+import 'package:Screetner/services/LocationRecorder.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-import '../services/VideoSession.dart';
 import '../services/models/SecureStorageCache.dart';
 import '../types/ImmutableVideoRecordManagerContext.dart';
 

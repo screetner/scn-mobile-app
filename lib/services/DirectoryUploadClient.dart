@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
-import 'package:tus_client_background_demo/services/models/DirectoryUploadStateStore.dart';
-import 'package:tus_client_background_demo/services/models/DirectoryUploadState.dart';
+import 'package:Screetner/services/models/DirectoryUploadStateStore.dart';
+import 'package:Screetner/services/models/DirectoryUploadState.dart';
 import 'package:tus_client_dart/tus_client_dart.dart';
 
 import 'models/CustomTusFileStore.dart';

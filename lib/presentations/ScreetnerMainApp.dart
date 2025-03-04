@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:tus_client_background_demo/services/interceptors/ExpiredTokenInterceptor.dart';
+import 'package:Screetner/services/interceptors/ExpiredTokenInterceptor.dart';
 
 import '../pages/HomePage.dart';
 import '../pages/InformationPage.dart';

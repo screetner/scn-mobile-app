@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:tus_client_background_demo/providers/ImageLocationRecordController.dart';
+import 'package:Screetner/providers/ImageLocationRecordController.dart';
 
 class RecordPage extends StatefulWidget {
   const RecordPage({super.key});

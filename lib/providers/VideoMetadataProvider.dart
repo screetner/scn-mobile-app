@@ -5,7 +5,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:get_thumbnail_video/video_thumbnail.dart';
-import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
+import 'package:Screetner/services/DirectoryUploadClient.dart';
 import '../types/ImmutableVideoRecordManagerContext.dart';
 
 class VideoMetadataProvider {

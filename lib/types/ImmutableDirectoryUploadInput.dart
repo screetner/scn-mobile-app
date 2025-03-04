@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:tus_client_background_demo/types/ImmutableUploadManagerContext.dart';
+import 'package:Screetner/types/ImmutableUploadManagerContext.dart';
 import 'package:tus_client_dart/tus_client_dart.dart';
 
 class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{

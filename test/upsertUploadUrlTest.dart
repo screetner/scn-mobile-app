@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'package:tus_client_background_demo/main.dart';
-import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
+import 'package:Screetner/main.dart';
+import 'package:Screetner/services/DirectoryUploadClient.dart';
 import 'package:path/path.dart' as path;
-import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
-import 'package:tus_client_background_demo/services/models/DirectoryUploadStateStore.dart';
+import 'package:Screetner/providers/DirectoryUploadManager.dart';
+import 'package:Screetner/services/models/DirectoryUploadStateStore.dart';
 
 void main() {
   // testWidgets('Counter increments smoke test', (WidgetTester tester) async {

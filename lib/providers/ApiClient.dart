@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:tus_client_background_demo/services/interceptors/ExpiredTokenInterceptor.dart';
-import 'package:tus_client_background_demo/types/ImmutableUploadManagerContext.dart';
+import 'package:Screetner/services/interceptors/ExpiredTokenInterceptor.dart';
+import 'package:Screetner/types/ImmutableUploadManagerContext.dart';
 
 import '../services/models/SecureStorageCache.dart';
 import '../types/api/Auth.dart';

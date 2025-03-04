@@ -1,4 +1,4 @@
-import 'package:tus_client_background_demo/types/api/VideoSession.dart';
+import 'package:Screetner/types/api/VideoSession.dart';
 
 import '../providers/ApiClient.dart';
 

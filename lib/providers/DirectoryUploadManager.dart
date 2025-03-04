@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:tus_client_background_demo/services/VideoSession.dart';
-import 'package:tus_client_background_demo/services/models/ProgressFileStore.dart';
-import 'package:tus_client_background_demo/services/models/SecureStorageCache.dart';
-import 'package:tus_client_background_demo/types/ImmutableDirectoryUploadInput.dart';
-import 'package:tus_client_background_demo/services/DirectoryUploadClient.dart';
-import 'package:tus_client_background_demo/providers/NotificationManager.dart';
-import 'package:tus_client_background_demo/types/api/VideoSession.dart';
+import 'package:Screetner/services/VideoSession.dart';
+import 'package:Screetner/services/models/ProgressFileStore.dart';
+import 'package:Screetner/services/models/SecureStorageCache.dart';
+import 'package:Screetner/types/ImmutableDirectoryUploadInput.dart';
+import 'package:Screetner/services/DirectoryUploadClient.dart';
+import 'package:Screetner/providers/NotificationManager.dart';
+import 'package:Screetner/types/api/VideoSession.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../types/ImmutableUploadManagerContext.dart';

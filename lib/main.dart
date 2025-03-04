@@ -7,9 +7,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:tus_client_background_demo/providers/ImageLocationRecordController.dart';
-import 'package:tus_client_background_demo/types/ImmutableVideoRecordManagerContext.dart';
-import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
+import 'package:Screetner/providers/ImageLocationRecordController.dart';
+import 'package:Screetner/types/ImmutableVideoRecordManagerContext.dart';
+import 'package:Screetner/providers/DirectoryUploadManager.dart';
 
 import 'types/ImmutableUploadManagerContext.dart';
 import 'providers/VideoMetadataProvider.dart';

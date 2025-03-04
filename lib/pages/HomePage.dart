@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:tus_client_background_demo/presentations/ScreetnerMainApp.dart';
-import 'package:tus_client_background_demo/providers/DirectoryUploadManager.dart';
-import 'package:tus_client_background_demo/providers/ErrorAsserter.dart';
-import 'package:tus_client_background_demo/providers/ProgressIsolateManager.dart';
-import 'package:tus_client_background_demo/providers/VideoMetadataProvider.dart';
+import 'package:Screetner/presentations/ScreetnerMainApp.dart';
+import 'package:Screetner/providers/DirectoryUploadManager.dart';
+import 'package:Screetner/providers/ErrorAsserter.dart';
+import 'package:Screetner/providers/ProgressIsolateManager.dart';
+import 'package:Screetner/providers/VideoMetadataProvider.dart';
 
 import '../component/CustomProgressIndicator.dart';
 import '../services/VideoSession.dart';
