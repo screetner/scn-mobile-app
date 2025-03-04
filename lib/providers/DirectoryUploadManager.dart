@@ -50,11 +50,12 @@ class DirectoryUploadManager {
     return notificationsInitialized;
   }
 
-  void deleteDirectory({required Directory deleteDirectory}) {
+  Future<void> deleteDirectory({required Directory deleteDirectory}) async {
     deleteDirectory.deleteSync(recursive: true);
-    // TODO: remove directory from progressFile
-    // final progressStore = new ProgressFileStore(progressFile);
-    // progressStore.remove(deleteDirectory.path);
+
+    final progressStore = new ProgressFileStore(DirectoryUploadManager().getContext().uploadProgressDirectory);
+    final psFingerprint = ProgressFileStore.convertToFingerprint(deleteDirectory.path);
+    await progressStore.remove(psFingerprint);
   }
 
   Future<void> uploadDirectory({required Directory uploadDirectory, int? chunkSize}) async {

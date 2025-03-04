@@ -216,6 +216,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
   }
 
   Future<void> _requestUploadVideoSession(Directory sessionDirectory) async {
+    final progressStore = new ProgressFileStore(DirectoryUploadManager().getContext().uploadProgressDirectory);
+    final psFingerprint = ProgressFileStore.convertToFingerprint(sessionDirectory.path);
+    progressStore.set(psFingerprint, VideoSessionUploadProgress(progress: 0.0, uploadState: VideoSessionUploadStateEnum.REQUESTING_UPLOAD));
+
     File infoFile =  VideoMetadataProvider().getInformationFile(sessionDirectory);
     final info = await VideoMetadataProvider().getVideoSessionInfoFromFile(infoFile);
     final allVideoFileName = info.videoTlocTuples.map((tuple) => tuple.videoName).toList();
@@ -289,10 +293,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
               onPressed: () async {
                 Navigator.of(context).pop();
 
-                final progressStore = new ProgressFileStore(DirectoryUploadManager().getContext().uploadProgressDirectory);
-                final psFingerprint = ProgressFileStore.convertToFingerprint(videoInfo.sessionDirectory.path);
-                await progressStore.remove(psFingerprint);
-                DirectoryUploadManager().deleteDirectory(deleteDirectory: videoInfo.sessionDirectory);
+                await DirectoryUploadManager().deleteDirectory(deleteDirectory: videoInfo.sessionDirectory);
 
                 _removeItem(videoInfo);
                 _showDeleteNotification(context);
