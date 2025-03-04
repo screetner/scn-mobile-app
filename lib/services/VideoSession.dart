@@ -43,7 +43,6 @@ class VideoSession {
 
   Future<UpdateVideoSessionResponseDTO> updateVideoSessionState(UpdateVideoSessionDTO body) async {
     try {
-      // TODO: change api path once it changed to `/videoSession/updateProgress`
       final response = await _apiClient.dio.patch<Map<String, dynamic>>(
         '/videoSession/updateProcess',
         data: {
