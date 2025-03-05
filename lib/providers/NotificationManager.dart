@@ -36,7 +36,7 @@ class NotificationManager {
         "Notification channel for reporting file upload progress";
 
     bool notificationsInitialized = await AwesomeNotifications().initialize(
-      null, // default icon
+      'resource://drawable/res_notification_logo_small', // default icon
       [
         NotificationChannel(
           channelGroupKey: _context.notificationChannelGroupKey,
@@ -102,7 +102,6 @@ class NotificationManager {
           notificationLayout: NotificationLayout.ProgressBar,
           progress: progress,
           locked: true,
-          // icon: 'asset://assets/images/logo3.png',
         ),
       );
     } else {
@@ -116,7 +115,6 @@ class NotificationManager {
           category: NotificationCategory.Progress,
           notificationLayout: NotificationLayout.Default,
           locked: false,
-          // icon: 'asset://assets/images/logo3.png',
         ),
       );
     }
