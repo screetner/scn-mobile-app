@@ -218,7 +218,15 @@ class _HomePageState extends State<HomePage> with RouteAware {
   Future<void> _requestUploadVideoSession(Directory sessionDirectory) async {
     final progressStore = new ProgressFileStore(DirectoryUploadManager().getContext().uploadProgressDirectory);
     final psFingerprint = ProgressFileStore.convertToFingerprint(sessionDirectory.path);
-    progressStore.set(psFingerprint, VideoSessionUploadProgress(progress: 0.0, uploadState: VideoSessionUploadStateEnum.REQUESTING_UPLOAD));
+
+    final currentProgress = await progressStore.get(psFingerprint);
+    progressStore.set(
+        psFingerprint,
+        VideoSessionUploadProgress(
+            progress: currentProgress?.progress ?? 0.0,
+            uploadState: VideoSessionUploadStateEnum.REQUESTING_UPLOAD
+        )
+    );
 
     File infoFile =  VideoMetadataProvider().getInformationFile(sessionDirectory);
     final info = await VideoMetadataProvider().getVideoSessionInfoFromFile(infoFile);
