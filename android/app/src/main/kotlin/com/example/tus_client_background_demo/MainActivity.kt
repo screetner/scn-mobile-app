@@ -1,4 +1,4 @@
-package com.example.tus_client_background_demo
+package com.example.Screetner
 
 import io.flutter.embedding.android.FlutterActivity
 
