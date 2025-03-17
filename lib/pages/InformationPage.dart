@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../component/custom_button.dart';
+import '../component/CustomButton.dart';
 import '../pages/LoginPage.dart';
+import '../services/models/SecureStorageCache.dart';
 
 class InformationPage extends StatefulWidget {
   const InformationPage({Key? key}) : super(key: key);
@@ -12,7 +13,7 @@ class InformationPage extends StatefulWidget {
 }
 
 class _InformationPageState extends State<InformationPage> {
-  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  final FlutterSecureStorage secureStorage = SecureStorageCache();
   late final String username;
   late final String orgName;
   late final String role;

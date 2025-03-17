@@ -1,19 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit_config.dart';
-import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
-import 'package:ffmpeg_kit_flutter/media_information.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
-
+import 'package:get_thumbnail_video/video_thumbnail.dart';
+import 'package:Screetner/services/DirectoryUploadClient.dart';
 import '../types/ImmutableVideoRecordManagerContext.dart';
 
 class VideoMetadataProvider {
   bool _isInitialized = false;
 
-  late Directory _videoDirectory;
+  late Directory _recordDirectory;
 
   VideoMetadataProvider._privateConstructor();
 
@@ -28,59 +26,91 @@ class VideoMetadataProvider {
       return;
     }
 
-    _videoDirectory = context.recordDirectory;
+    _recordDirectory = context.recordDirectory;
 
-    if(!_videoDirectory.existsSync()) {
-      _videoDirectory.createSync(recursive: true);
+    if(!_recordDirectory.existsSync()) {
+      _recordDirectory.createSync(recursive: true);
     }
 
     _isInitialized = true;
   }
 
   Future<List<VideoInfo>> getVideoInfo() async {
-    final List<File> videoFiles = await getVideoFiles();
+    final List<Directory> recordSessions = getVideoSessions();
 
-    final filesCount = videoFiles.length;
+    final recordsCount = recordSessions.length;
     final batchSize = 10;
 
-    // NOTE: We cannot run more than 10 ffprobe executions at a time.
-    List<VideoInfo> videoInfoList = [];
-    for(int i = 0; i < filesCount; i += batchSize) {
-      final batch = videoFiles.sublist(i, min(i + batchSize, filesCount));
+    List<VideoInfo> recordInfoList = [];
+    for(int i = 0; i < recordsCount; i += batchSize) {
+      final batch = recordSessions.sublist(i, min(i + batchSize, recordsCount));
 
-      List<Future<VideoInfo>> batchFutures = batch.map((File file) async {
-        final metadata = await _getVideoMetadata(file.path);
+      List<Future<VideoInfo>> batchFutures = batch.map((Directory directory) async {
+        try {
+          final info = await getVideoSessionInfo(directory);
 
-        final durationMicroseconds = (double.parse(metadata!.getDuration()!) * 1000000).toInt();
-        final fileName = file.path.split('/').last.split('.').first;
-        final videoTitle = parseAndFormatUnixTimestamp(fileName) ?? fileName;
+          final videoTlocTuples = info.videoTlocTuples;
+          final firstVideoName = videoTlocTuples.first.videoName;
+          final firstVideoPath = '${directory.path}/$firstVideoName';
+          final thumbnail = await _getThumbnail(firstVideoPath);
 
-        return VideoInfo(
-          thumbnail: await getThumbnail(file.path),
-          videoLength: Duration(microseconds: durationMicroseconds),
-          videoTitle: videoTitle,
-        );
+          final sessionName = directory.path
+              .split('/')
+              .last
+              .split('.')
+              .first;
+          final sessionTitle = parseAndFormatUnixTimestamp(sessionName) ?? sessionName;
+
+          return VideoInfo(
+            thumbnail: thumbnail,
+            sessionTitle: sessionTitle,
+            sessionDirectory: directory,
+            fingerprint: DirectoryUploadClient.getAsFingerprint(directory.path)
+          );
+        } catch (e, stackTrace) {
+          return VideoInfo(
+            thumbnail: null,
+            sessionTitle: e.toString(),
+            sessionDirectory: directory,
+            fingerprint: DirectoryUploadClient.getAsFingerprint(directory.path)
+          );
+        }
       }).toList();
 
       List<VideoInfo> batchResults = await Future.wait(batchFutures);
-      videoInfoList.addAll(batchResults);
+      recordInfoList.addAll(batchResults);
     }
 
-    return videoInfoList;
+    return recordInfoList;
   }
 
-  Future<List<File>> getVideoFiles() async {
-    return _videoDirectory
+  File getInformationFile(Directory directory) {
+    return File('${directory.path}/information.json');
+  }
+
+  Future<ImmutableVideoSessionInformation> getVideoSessionInfoFromFile(File infoFile) async {
+    final infoJsonString = await infoFile.readAsString();
+    final info = jsonDecode(infoJsonString);
+
+    return ImmutableVideoSessionInformation.fromJson(info);
+  }
+
+  Future<ImmutableVideoSessionInformation> getVideoSessionInfo(Directory directory) async {
+    final infoFile = getInformationFile(directory);
+    return await getVideoSessionInfoFromFile(infoFile);
+  }
+
+  List<Directory> getVideoSessions() {
+    return _recordDirectory
         .listSync()
-        .where((item) => item.path.endsWith(".mp4"))
-        .map((item) => File(item.path))
+        .where((item) => item is Directory)
+        .map((item) => Directory(item.path))
         .toList();
   }
 
-  Future<Uint8List?> getThumbnail(String filePath) async {
+  Future<Uint8List?> _getThumbnail(String filePath) async {
     return VideoThumbnail.thumbnailData(
       video: filePath,
-      imageFormat: ImageFormat.JPEG,
       maxWidth: 128,
       quality: 75,
     );
@@ -108,41 +138,70 @@ class VideoMetadataProvider {
     return '$hour:$minute $weekday $date $month $year';
   }
 
-  Future<MediaInformation?> _getVideoMetadata(String filePath) async {
-    try {
-      return FFprobeKit.getMediaInformation(filePath).then((session) async {
-        final information = await session.getMediaInformation();
-
-        if (information == null) {
-          final state = FFmpegKitConfig.sessionStateToString(
-              await session.getState());
-          final returnCode = await session.getReturnCode();
-          final failStackTrace = await session.getFailStackTrace();
-          final duration = await session.getDuration();
-          final output = await session.getOutput();
-        }
-
-        return information;
-      });
-    } catch (e) {
-      return null;
-    }
-  }
-
   /// The 'video record directory path'
-  Directory get recordDirectory => _videoDirectory;
+  Directory get recordDirectory => _recordDirectory;
 }
 
 class ImmutableVideoInformation {
   final Uint8List? thumbnail;
-  final Duration? videoLength;
-  final String? videoTitle;
+  final int? frameCount;
+  final String fingerprint;
+  final String sessionTitle;
+  final Directory sessionDirectory;
 
   ImmutableVideoInformation({
     Uint8List? this.thumbnail,
-    Duration? this.videoLength,
-    String? this.videoTitle
+    int? this.frameCount,
+    required this.fingerprint,
+    required this.sessionTitle,
+    required this.sessionDirectory,
   }) {}
 }
 
 typedef VideoInfo = ImmutableVideoInformation;
+
+class ImmutableVideoSessionInformation {
+  final int videoCount;
+  final String sessionStartTime;
+  final List<VideoTlocTuples> videoTlocTuples;
+  final String? videoSessionId;
+
+  ImmutableVideoSessionInformation ({
+    required this.videoCount,
+    required this.sessionStartTime,
+    required this.videoTlocTuples,
+    required this.videoSessionId,
+  }) {}
+
+  factory ImmutableVideoSessionInformation.fromJson(Map<String, dynamic> json) {
+    final videoTlocTuplesJson = json['videoTlocTuples'] as List;
+    List<VideoTlocTuples> videoTlocTuplesList = videoTlocTuplesJson.map((i) => VideoTlocTuples.fromJson(i)).toList();
+
+    return ImmutableVideoSessionInformation(
+      videoCount: json['videoCount'],
+      sessionStartTime: json['sessionStartTime'],
+      videoTlocTuples: videoTlocTuplesList,
+      videoSessionId: json['videoSessionId'],
+    );
+  }
+}
+
+class VideoTlocTuples {
+  final String videoName;
+  final int videoRecordedTime;
+  final String tlocName;
+
+  VideoTlocTuples ({
+    required this.videoName,
+    required this.videoRecordedTime,
+    required this.tlocName,
+  }) {}
+
+  factory VideoTlocTuples.fromJson(Map<String, dynamic> json) {
+    return VideoTlocTuples(
+      videoName: json['videoName'],
+      videoRecordedTime: json['videoRecordedTime'],
+      tlocName: json['tlocName'],
+    );
+  }
+}

@@ -61,7 +61,8 @@ class DirectoryUploadFileStore implements DirectoryUploadStoreI {
   Future<void> set(String fingerprint, UploadState uploadState) async {
     try {
       final file = await _getFile(fingerprint);
-      await file.writeAsString(await _encodeMap(uploadState));
+      final uploadStateString = await _encodeMap(uploadState);
+      await file.writeAsString(uploadStateString, mode: FileMode.writeOnly, flush: true);
     } catch (e, stackTrace) {
       // TODO: implement error handling
       print('An error occurred: $e');

@@ -1,31 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:Screetner/services/interceptors/ExpiredTokenInterceptor.dart';
 
 import '../pages/HomePage.dart';
 import '../pages/InformationPage.dart';
 import '../pages/LoginPage.dart';
-import '../pages/NotificationPage.dart';
 import '../pages/RecordPage.dart';
+import '../services/models/SecureStorageCache.dart';
 
 class ScreetnerMainApp extends StatelessWidget {
   ScreetnerMainApp({super.key});
-  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  final FlutterSecureStorage secureStorage = SecureStorageCache();
 
-  Future<String?> _getAccessToken() async {
-    final accessToken = await secureStorage.read(key: 'accessToken');
-    return accessToken;
-  }
+  static final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(useMaterial3: true),
-      home: FutureBuilder<String?>(
-        future: _getAccessToken(),
+      navigatorObservers: [routeObserver],
+      home: FutureBuilder<bool>(
+        future: ExpiredTokenInterceptor.isRefreshTokenExpired(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasData && snapshot.data != null) {
+          } else if (snapshot.hasData && !snapshot.data!) {
             return const ScreetnerHome();
           } else {
             return LoginPage();
@@ -52,7 +51,6 @@ class _ScreetnerHomeState extends State<ScreetnerHome> {
       body: <Widget>[
         HomePage(),
         const RecordPage(),
-        const NotificationPage(),
         const InformationPage(),
       ][currentPageIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -83,10 +81,6 @@ class _ScreetnerHomeState extends State<ScreetnerHome> {
           BottomNavigationBarItem(
             icon: _buildNavItemIcon(Icons.videocam, 1),
             label: 'Record',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildNavItemIcon(Icons.list, 2),
-            label: 'History',
           ),
           BottomNavigationBarItem(
             icon: _buildNavItemIcon(Icons.info, 3),

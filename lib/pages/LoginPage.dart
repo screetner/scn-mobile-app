@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../presentations/ScreetnerMainApp.dart';
 import '../services/Auth.dart';
+import '../services/models/SecureStorageCache.dart';
 import '../types/api/Auth.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,7 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  final FlutterSecureStorage secureStorage = SecureStorageCache();
   bool _isLoading = false;
   final authService = Auth();
 
@@ -31,16 +33,29 @@ class _LoginPageState extends State<LoginPage> {
         final response = await authService.login(loginDto);
         await secureStorage.write(key: 'accessToken', value: response.accessToken);
         await secureStorage.write(key: 'refreshToken', value: response.refreshToken);
+        await secureStorage.write(key: 'tusdToken', value: response.tusdToken);
+        await secureStorage.write(key: 'accessTokenExpiry', value: response.accessTokenExpiry);
+        await secureStorage.write(key: 'refreshTokenExpiry', value: response.refreshTokenExpiry);
         await secureStorage.write(key: 'username', value: response.username);
+        await secureStorage.write(key: 'userId', value: response.userId);
         await secureStorage.write(key: 'orgName', value: response.orgName);
         await secureStorage.write(key: 'role', value: response.roleName);
 
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ScreetnerHome()));
       } catch (error) {
         print('Login failed: $error');
+
+        final message = switch (error) {
+          DioException e => switch (e.response?.statusCode) {
+            401 => 'Invalid username or password',
+            _ => e.response?.statusMessage ?? e.response?.statusMessage,
+          },
+          _ => error.toString()
+        };
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login failed: $error'),
+            content: Text('Login failed: $message'),
             backgroundColor: Colors.redAccent,
           ),
         );

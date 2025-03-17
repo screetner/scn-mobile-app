@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:tus_client_background_demo/types/ImmutableUploadManagerContext.dart';
+import 'package:Screetner/types/ImmutableUploadManagerContext.dart';
 import 'package:tus_client_dart/tus_client_dart.dart';
 
 class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
@@ -15,9 +15,12 @@ class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
   ImmutableDirectoryUploadInput({
     required this.uploadDirectory,
     required super.tusdServerUrl,
+    required super.apiUrl,
     required super.tusStoreDirectory,
+    required super.uploadProgressDirectory,
     required super.notificationChannelKey,
     required super.notificationChannelGroupKey,
+    required super.tusdToken,
     int? this.chunkSize,
     int? this.retries,
     RetryScale? this.retryScale,
@@ -48,7 +51,9 @@ class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
     return new ImmutableDirectoryUploadInput(
       uploadDirectory: Directory(input['upload_directory_path']!),
       tusdServerUrl: uploadContext.tusdServerUrl,
+      apiUrl: uploadContext.apiUrl,
       tusStoreDirectory: uploadContext.tusStoreDirectory,
+      uploadProgressDirectory: uploadContext.uploadProgressDirectory,
       notificationChannelKey: uploadContext.notificationChannelKey,
       notificationChannelGroupKey: uploadContext.notificationChannelGroupKey,
       chunkSize: input['chunk_size'],
@@ -58,6 +63,7 @@ class ImmutableDirectoryUploadInput extends ImmutableUploadManagerContext{
       notificationSoundSource: uploadContext.notificationSoundSource,
       notificationDefaultColor: uploadContext.notificationDefaultColor,
       notificationVibrationPattern: uploadContext.notificationVibrationPattern,
+      tusdToken: uploadContext.tusdToken,
     );
   }
 }

@@ -4,7 +4,9 @@ import 'dart:ui';
 
 class ImmutableUploadManagerContext {
   final Uri tusdServerUrl;
+  final Uri apiUrl;
   final Directory tusStoreDirectory;
+  final Directory uploadProgressDirectory;
   final String notificationChannelKey;
   late final String notificationChannelKeySilent;
   late final String notificationChannelKeyAudible;
@@ -15,12 +17,16 @@ class ImmutableUploadManagerContext {
   final String? notificationSoundSource;
   final Color? notificationDefaultColor;
   final Int64List? notificationVibrationPattern;
+  final String? tusdToken;
 
   ImmutableUploadManagerContext({
     required this.tusdServerUrl,
+    required this.apiUrl,
     required this.tusStoreDirectory,
+    required this.uploadProgressDirectory,
     required this.notificationChannelKey,
     required this.notificationChannelGroupKey,
+    required this.tusdToken,
     String? this.notificationChannelName,
     String? this.notificationChannelGroupName,
     String? this.notificationChannelDescription,
@@ -35,7 +41,9 @@ class ImmutableUploadManagerContext {
   ImmutableUploadManagerContext clone() {
     return new ImmutableUploadManagerContext (
       tusdServerUrl: this.tusdServerUrl,
+      apiUrl: this.apiUrl,
       tusStoreDirectory: this.tusStoreDirectory,
+      uploadProgressDirectory:  this.uploadProgressDirectory,
       notificationChannelKey: this.notificationChannelKey,
       notificationChannelGroupKey: this.notificationChannelGroupKey,
       notificationChannelName: this.notificationChannelName,
@@ -44,13 +52,16 @@ class ImmutableUploadManagerContext {
       notificationSoundSource: this.notificationSoundSource,
       notificationDefaultColor: this.notificationDefaultColor,
       notificationVibrationPattern: this.notificationVibrationPattern,
+      tusdToken: this.tusdToken,
     );
   }
 
   Map<String, dynamic> toJson() {
     Map<String,dynamic> map = {
       'tusd_server_url': tusdServerUrl.toString(),
+      'api_url': apiUrl.toString(),
       'tus_store_directory_path': tusStoreDirectory.path,
+      'progress_store_file_path': uploadProgressDirectory.path,
       'notification_channel_key': notificationChannelKey,
       'notification_channel_group_key': notificationChannelGroupKey,
       'notification_channel_name': notificationChannelName,
@@ -59,6 +70,7 @@ class ImmutableUploadManagerContext {
       'notification_sound_source': notificationSoundSource,
       'notification_default_color': notificationDefaultColor?.value,
       'notification_vibration_pattern': notificationVibrationPattern?.toList(),
+      'tusd_token': tusdToken,
     };
 
     // Remove keys with null values
@@ -69,7 +81,9 @@ class ImmutableUploadManagerContext {
   static ImmutableUploadManagerContext toObject(Map<String, dynamic> input) {
     return new ImmutableUploadManagerContext(
       tusdServerUrl: Uri.parse(input['tusd_server_url']!),
+      apiUrl: Uri.parse(input['api_url']!),
       tusStoreDirectory: Directory(input['tus_store_directory_path']!),
+      uploadProgressDirectory: Directory(input['progress_store_file_path']!),
       notificationChannelKey: input['notification_channel_key']!,
       notificationChannelGroupKey: input['notification_channel_group_key']!,
       notificationChannelName: input['notification_channel_name'],
@@ -78,6 +92,7 @@ class ImmutableUploadManagerContext {
       notificationSoundSource: input['notification_sound_source'],
       notificationDefaultColor: input['notification_default_color'] != null ? Color(input['notification_default_color']) : null,
       notificationVibrationPattern: input['notification_vibration_pattern'] != null ? Int64List.fromList(List<int>.from(input['notification_vibration_pattern'])) : null,
+      tusdToken: input['tusd_token'],
     );
   }
 }

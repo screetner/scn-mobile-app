@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
-import 'package:tus_client_background_demo/services/models/DirectoryUploadStateStore.dart';
-import 'package:tus_client_background_demo/services/models/DirectoryUploadState.dart';
+import 'package:Screetner/services/models/DirectoryUploadStateStore.dart';
+import 'package:Screetner/services/models/DirectoryUploadState.dart';
 import 'package:tus_client_dart/tus_client_dart.dart';
 
 import 'models/CustomTusFileStore.dart';
@@ -63,17 +63,16 @@ class DirectoryUploadClient{
           );
 
           final dynamic Function(TusClient, Duration?)? onStart = (TusClient client, Duration? estimate) {
-            _currentFileUploadProgress = 0;
             return onFileUploadStart?.call(client, estimate);
           };
 
           final dynamic Function(double, Duration) onProgress = (double progressPercentage, Duration estimate) {
-            _currentFileUploadProgress = ((progressPercentage / 100) * getFileSize(filePath)).round();
+            final onGoingFileUploadProgress = ((progressPercentage / 100) * getFileSize(filePath)).round();
+            _uploadState.setOnGoingFileUploadProgressBytes(filePath, onGoingFileUploadProgress);
             return onFileUploadProgress?.call(progressPercentage, estimate);
           };
 
           final dynamic Function() onComplete = () {
-            _currentFileUploadProgress = getFileSize(filePath);
             onFileUploadComplete?.call();
           };
 
@@ -98,7 +97,6 @@ class DirectoryUploadClient{
         }
       });
 
-      _currentFileUploadProgress = 0;
       await removeUploadState();
     } catch (e, stackTrace) {
       // TODO: implement error handling
@@ -237,15 +235,7 @@ class DirectoryUploadClient{
   }
 
   int getTotalDirectorySize() {
-    return _uploadState.getTotalFileSize();
-  }
-
-  int getFinishedUploadProgress() {
-    return _uploadState.getFinishedFileSize();
-  }
-
-  int getCurrentUploadFileSize() {
-    return _uploadState.getCurrentFileSize();
+    return _uploadState.getTotalUploadSize();
   }
 
   int getFileSize(String? filePath) {
@@ -253,11 +243,13 @@ class DirectoryUploadClient{
   }
 
   int getUploadProgress() {
-    return getFinishedUploadProgress() + _currentFileUploadProgress;
+    return _uploadState.getTotalUploadProgress();
   }
 
   double getUploadProgressRatio() {
-    return getUploadProgress() / getTotalDirectorySize();
+    final uploadProgress = getUploadProgress();
+    final totalDirectorySize = getTotalDirectorySize();
+    return uploadProgress / totalDirectorySize;
   }
 
   double getUploadProgressPercentage() {
@@ -265,7 +257,11 @@ class DirectoryUploadClient{
   }
 
   String? generateFingerprint() {
-    return _uploadDirectory.path.replaceAll(RegExp(r"\W+"), '_');
+    return getAsFingerprint(_uploadDirectory.path);
+  }
+
+  static String getAsFingerprint(String str) {
+    return str.replaceAll(RegExp(r"\W+"), '_');
   }
 
   TusClient? get currentTusClient => _currentTusClient;
@@ -281,7 +277,6 @@ class DirectoryUploadClient{
   late String _fingerprint;
 
   late UploadState _uploadState;
-  int _currentFileUploadProgress = 0;
 
   int? maxChunkSize;
   int? retries;
